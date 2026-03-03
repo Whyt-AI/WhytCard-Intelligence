@@ -15,6 +15,5 @@
   "tags": ["ai-workflows", "productivity", "quality-gates", "autonomous"],
   "commands": "./commands/",
   "skills": "./skills/",
-  "rules": "./rules/",
-  "hooks": "./hooks/hooks.cursor.json"
+  "rules": "./rules/"
 }

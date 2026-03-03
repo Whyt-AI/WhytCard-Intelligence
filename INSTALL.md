@@ -31,6 +31,8 @@ The script installs everything so Cursor detects it **without manual steps**:
 - Install Cursor **rules** into: `~/.cursor/rules/`
 - Install **global Cursor hooks** into: `~/.cursor/hooks.json` (so the orchestrator gates run everywhere)
 
+Note: The plugin does **not** rely on Cursor plugin-level hooks (`$CURSOR_PLUGIN_ROOT`) to avoid environment issues on Windows. Global hooks use absolute paths.
+
 ### Technical notes (Cursor vs Claude)
 
 - **Cursor** reads hooks declared in `.cursor-plugin/plugin.json` (here: `hooks/hooks.cursor.json`).
