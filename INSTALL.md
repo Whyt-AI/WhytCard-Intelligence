@@ -29,6 +29,7 @@ The script installs everything so Cursor detects it **without manual steps**:
 - Install Cursor **commands** into: `~/.cursor/commands/` (so `/wi-*` appears)
 - Install Cursor **skills** into: `~/.cursor/skills/`
 - Install Cursor **rules** into: `~/.cursor/rules/`
+- Install **global Cursor hooks** into: `~/.cursor/hooks.json` (so the orchestrator gates run everywhere)
 
 ### Technical notes (Cursor vs Claude)
 

@@ -10,6 +10,7 @@ $TargetDir = Join-Path $env:USERPROFILE ".cursor\plugins\$PluginName"
 $CursorCommandsDir = Join-Path $env:USERPROFILE ".cursor\commands"
 $CursorSkillsDir = Join-Path $env:USERPROFILE ".cursor\skills"
 $CursorRulesDir = Join-Path $env:USERPROFILE ".cursor\rules"
+$CursorHooksPath = Join-Path $env:USERPROFILE ".cursor\hooks.json"
 $ClaudePluginsDir = Join-Path $env:USERPROFILE ".claude\plugins"
 $InstalledPluginsPath = Join-Path $ClaudePluginsDir "installed_plugins.json"
 $SettingsPath = Join-Path $env:USERPROFILE ".claude\settings.json"
@@ -86,12 +87,19 @@ if ($LASTEXITCODE -ne 0) { throw "JSON merge failed" }
 Write-Host "  OK: $PluginId registered and enabled" -ForegroundColor Green
 
 Write-Host ""
+Write-Host "[2b/3] Installing global Cursor hooks..." -ForegroundColor Yellow
+$cursorHooksMerge = Join-Path (Join-Path $RepoRoot "scripts") "install-cursor-hooks-merge.js"
+node $cursorHooksMerge $CursorHooksPath $PluginName $TargetDir
+if ($LASTEXITCODE -ne 0) { throw "Cursor hooks merge failed" }
+Write-Host "  OK: Cursor hooks merged into $CursorHooksPath" -ForegroundColor Green
+
+Write-Host ""
 Write-Host "Installation complete." -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor White
 Write-Host "  1. Restart Cursor (or Reload Window: Ctrl+Shift+P)" -ForegroundColor Gray
-Write-Host "  2. Settings > Features > Include third-party Plugins = ON" -ForegroundColor Gray
-Write-Host "  3. Commands /wi-brainstorm, /wi-add-feature should appear" -ForegroundColor Gray
+Write-Host "  2. Commands /wi-brainstorm, /wi-add-feature should appear" -ForegroundColor Gray
+Write-Host "     (Global hooks are installed via ~/.cursor/hooks.json)" -ForegroundColor Gray
 Write-Host ""
 Write-Host "Claude Code: plugin shared via .claude" -ForegroundColor Gray
 Write-Host ""
