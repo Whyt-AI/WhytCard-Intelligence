@@ -56,6 +56,7 @@ If disabled, the plugin’s commands and skills won’t appear.
 
 In Cursor chat, type `/` and verify:
 
+- `/wi-whytcard` (one-shot workflow: init → brainstorm → improve → review)
 - `/wi-init-project` (creates `.whytcard/projects/<id>/...`)
 - `/wi-brainstorm`
 - `/wi-add-feature`
