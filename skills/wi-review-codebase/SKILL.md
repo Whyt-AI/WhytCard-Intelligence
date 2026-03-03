@@ -102,3 +102,5 @@ Run each dimension. For each, produce findings with severity.
 ## Save location
 
 `.whytcard/projects/{id}/reviews/codebase-review-{date}.md`
+
+If the `reviews/` folder is missing, initialize the per-project structure first using `wi-init-project`.

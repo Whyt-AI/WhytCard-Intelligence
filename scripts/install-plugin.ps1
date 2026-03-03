@@ -14,7 +14,7 @@ $ClaudePluginsDir = Join-Path $env:USERPROFILE ".claude\plugins"
 $InstalledPluginsPath = Join-Path $ClaudePluginsDir "installed_plugins.json"
 $SettingsPath = Join-Path $env:USERPROFILE ".claude\settings.json"
 
-$DirsToCopy = @(".cursor-plugin", ".claude-plugin", "commands", "rules", "skills", "hooks", "AGENTS.md", "CLAUDE.md", "INSTALL.md", "README.md", "LICENSE")
+$DirsToCopy = @(".cursor-plugin", ".claude-plugin", "commands", "rules", "skills", "hooks", "scripts", "AGENTS.md", "CLAUDE.md", "INSTALL.md", "README.md", "LICENSE")
 
 Write-Host "WhytCard Intelligence - Installation" -ForegroundColor Cyan
 Write-Host "Source: $RepoRoot" -ForegroundColor Gray

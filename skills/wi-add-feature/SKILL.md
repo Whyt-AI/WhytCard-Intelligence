@@ -9,6 +9,10 @@ Autopilot mode. You analyze, decompose, implement, and verify the new feature.
 
 ## Workflow
 
+### 0. Ensure per-project KB structure exists
+
+- Run the `wi-init-project` skill (idempotent; no overwrites).
+
 ### 1. Understand the feature
 
 From the user's request, extract:
@@ -33,7 +37,14 @@ Break the feature into atomic micro-actions. Each action:
 
 ### 4. Create the pipeline
 
-In `.whytcard/projects/{id}/pipeline/steps/`, create one step per micro-action with instruction + acceptance criteria.
+Create one step per micro-action under:
+
+`.whytcard/projects/{id}/02_feature/steps/`
+
+Each step is a folder like `S001-<slug>/` with:
+- `instruction.md`
+- `acceptance.md`
+- `evidence/` (logs, screenshots, proof)
 
 ### 5. Execute
 

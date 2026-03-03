@@ -9,6 +9,10 @@ Autopilot mode. You systematically find and fix the bug.
 
 ## Workflow
 
+### 0. Ensure per-project KB structure exists
+
+- Run the `wi-init-project` skill (idempotent; no overwrites).
+
 ### 1. Gather context
 
 From the user's report, extract:
@@ -34,9 +38,13 @@ Launch an analysis agent to:
 
 ### 4. Fix
 
-Create a single step in `.whytcard/projects/{id}/pipeline/steps/`:
+Create a single step in:
+
+`.whytcard/projects/{id}/02_bugfix/steps/S001-<slug>/`
+
 - `instruction.md` — The specific fix with root cause context
 - `acceptance.md` — Bug no longer reproducible + all existing tests pass + new test covering the bug
+ - `evidence/` — repro logs, screenshots, command outputs
 
 Delegate to an implementation agent.
 

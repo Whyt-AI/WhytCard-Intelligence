@@ -18,6 +18,7 @@ Then in Cursor: **Ctrl+Shift+P → “Developer: Reload Window”** (or restart 
 
 In Cursor chat:
 - type `/wi` → you should see `/wi-brainstorm`, `/wi-add-feature`, etc.
+- run `/wi-init-project` once per repo to initialize `.whytcard/projects/<id>/...`
 
 ## What the script installs (no manual steps)
 

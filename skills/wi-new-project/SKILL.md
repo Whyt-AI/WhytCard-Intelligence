@@ -9,6 +9,13 @@ Autopilot mode. You create all necessary agents and run the full pipeline withou
 
 ## Workflow
 
+### 0. Initialize the KB project scaffold
+
+Before creating any steps, ensure the canonical per-project KB structure exists.
+
+- Run the `wi-init-project` skill (idempotent; no overwrites).
+- Use the created `.whytcard/projects/{projectId}/00_orchestrator/*` as the home for plans + state.
+
 ### 1. Gather requirements
 
 If the user hasn't specified, ask:
@@ -24,14 +31,14 @@ Launch research agents in parallel:
 
 ### 3. Create the pipeline
 
-In `.whytcard/projects/{projectId}/pipeline/steps/`, create steps:
+In `.whytcard/projects/{projectId}/01_foundation/steps/`, create steps:
 
 ```
-S001-init        — Initialize project (package.json, Cargo.toml, etc.)
-S002-config      — Configure tooling (linter, formatter, TypeScript, etc.)
-S003-structure   — Create directory structure and base files
-S004-first-comp  — Build the first meaningful component/module
-S005-gates       — Run all gates (lint, type-check, test, build)
+S001-init          — Initialize project (package.json, Cargo.toml, etc.)
+S002-config        — Configure tooling (linter, formatter, TypeScript, etc.)
+S003-structure     — Create directory structure and base files
+S004-first-module  — Build the first meaningful component/module
+S005-gates         — Run all gates (lint, type-check, test, build)
 ```
 
 Each step gets `instruction.md` + `acceptance.md`.

@@ -53,6 +53,7 @@ If disabled, the plugin’s commands and skills won’t appear.
 
 In Cursor chat, type `/` and verify:
 
+- `/wi-init-project` (creates `.whytcard/projects/<id>/...`)
 - `/wi-brainstorm`
 - `/wi-add-feature`
 - `/wi-fix-bug`

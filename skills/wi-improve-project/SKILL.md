@@ -9,6 +9,10 @@ Autopilot mode. You audit the existing codebase and systematically improve it.
 
 ## Workflow
 
+### 0. Ensure per-project KB structure exists
+
+- Run the `wi-init-project` skill (idempotent; no overwrites).
+
 ### 1. Audit
 
 Launch audit agents in parallel (each using the relevant skill):
@@ -28,7 +32,14 @@ Present to the user for approval. They may reorder or exclude items.
 
 ### 3. Create the pipeline
 
-For each approved improvement, create a step in `.whytcard/projects/{id}/pipeline/steps/` with instruction + acceptance criteria.
+For each approved improvement, create a step under:
+
+`.whytcard/projects/{id}/02_improvements/steps/`
+
+Each step is a folder `S###-<slug>/` with:
+- `instruction.md`
+- `acceptance.md`
+- `evidence/`
 
 ### 4. Execute
 
