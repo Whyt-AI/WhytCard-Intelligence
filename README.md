@@ -14,6 +14,16 @@ From this folder:
 
 Then in Cursor: **Ctrl+Shift+P → “Developer: Reload Window”** (or restart Cursor).
 
+## Installation (Linux/macOS)
+
+From this folder:
+
+```bash
+bash ./scripts/install-plugin.sh
+```
+
+Then restart Cursor (or Reload Window).
+
 ## Quick check
 
 In Cursor chat:

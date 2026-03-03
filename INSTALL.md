@@ -21,6 +21,16 @@ From the `WhytCard-Intelligence` folder:
 
 Then **restart Cursor** (or Reload Window: `Ctrl+Shift+P` → "Developer: Reload Window").
 
+## Quick install (Linux/macOS)
+
+From the `WhytCard-Intelligence` folder:
+
+```bash
+bash ./scripts/install-plugin.sh
+```
+
+Then restart Cursor (or Reload Window).
+
 ### What the script does (important)
 
 The script installs everything so Cursor detects it **without manual steps**:
