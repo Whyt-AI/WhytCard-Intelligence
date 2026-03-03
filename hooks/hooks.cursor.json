@@ -1,0 +1,66 @@
+{
+  "description": "WhytCard Intelligence orchestrator hooks — enforces delegation, quality gates, and pipeline discipline. (Cursor)",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CURSOR_PLUGIN_ROOT/hooks/wi-session-start.js\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CURSOR_PLUGIN_ROOT/hooks/wi-prompt-dispatch.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CURSOR_PLUGIN_ROOT/hooks/wi-pre-edit-gate.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CURSOR_PLUGIN_ROOT/hooks/wi-post-edit-verify.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "IMPORTANT: If stop_hook_active is true in the input, return 'allow' immediately to prevent infinite loops.\n\nBefore stopping, verify the orchestrator protocol was followed:\n\n1. DELEGATION: Did you delegate code work to agents, or did you write application code directly? If you wrote code outside .whytcard/ or config files, return 'deny' — the orchestrator must delegate.\n2. VISUAL: If agents modified visual files (.tsx, .jsx, .vue, .svelte, .css, .scss, .html, .astro), were screenshots verified at 3 viewports (375/768/1440px)? If not, return 'deny'.\n3. VERSIONS: If agents installed or updated packages, were versions verified via live search (not memory)? If not, return 'deny'.\n4. RESEARCH: If a technology recommendation was made, was dual-angle research done (good + bad + data)? If not, return 'deny'.\n5. EVIDENCE: Were agent results backed by evidence (gate logs, screenshots, test results)? Claims without proof = return 'deny'.\n6. PIPELINE: If in a pipeline, was the step evidence saved to .whytcard/? If not, return 'deny'.\n\nIf all checks pass or no code/UI work was done, return 'allow'.",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
+

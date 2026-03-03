@@ -1,0 +1,75 @@
+---
+description: "Visual verification evaluation grid — how to judge if an agent's UI work meets quality standards"
+alwaysApply: true
+---
+
+# Visual Verification — Evaluation Grid
+
+When an agent delivers UI work, use this grid to evaluate. If any check fails, you know exactly what to add to the instruction before re-delegating.
+
+## Hard gate
+
+- No "done" status for UI work without visual proof.
+- If browser or screenshot tooling is unavailable, explicitly request manual verification from the user using this checklist.
+- If any viewport fails, verdict is NOT READY.
+
+## Checklist
+
+- [ ] Screenshots taken at 3 viewports: 375px (mobile), 768px (tablet), 1440px (desktop)
+- [ ] Both light mode and dark mode checked
+- [ ] No horizontal overflow on mobile
+- [ ] No text truncation hiding meaning
+- [ ] Visual hierarchy clear (most important = most visible)
+- [ ] Typography hierarchy respected (h1 > h2 > h3 > body)
+- [ ] Spacings consistent and balanced
+- [ ] Contrast sufficient (AA minimum: 4.5:1 for text)
+- [ ] Focus indicators visible on interactive elements
+- [ ] Animations respect prefers-reduced-motion
+
+## Fix escalation order
+
+When a visual issue is found, fix it using the least invasive approach first:
+
+1. **Adjust value** — size, color, spacing, padding
+2. **Change utility class** — swap Tailwind/CSS class for a better fit
+3. **Override with more specific selector** — add specificity only when needed
+4. **Inspect computed styles** — use browser devtools to identify cascade conflicts
+5. **Restructure component** — last resort, when the DOM structure itself is the problem
+
+Include this order in agent instructions so the agent fixes issues cleanly instead of jumping to restructuring.
+
+## Evidence log
+
+The agent must provide:
+
+- Screenshot filenames or capture identifiers for each viewport and theme tested
+- Final verdict: READY (all checks pass) or NOT READY (list issues with file:line)
+- Unresolved issues (if any) with specific locations and suggested fixes
+
+Save screenshots to `.whytcard/projects/{id}/proofs/screenshots/{page}-{viewport}-{theme}.png`
+
+## Verdict format
+
+After evaluation, record:
+
+- **READY** — all checks pass, all viewports clean, both themes verified
+- **NOT READY** — list each failing check with the specific file:line, viewport, and what's wrong
+
+A verdict without evidence is not a verdict — it's an opinion.
+
+## Red flags in agent output
+
+- "Done" without screenshots → agent skipped verification
+- Only one viewport tested → instruction lacked viewport requirement
+- No dark mode check → instruction didn't mention themes
+- "Looks good" without evidence → agent asserted instead of proving
+
+## How to improve the instruction
+
+Missing screenshots → add: "Take screenshots at 375px, 768px, 1440px. Save to .whytcard/projects/{id}/proofs/screenshots/{page}-{viewport}-{theme}.png"
+
+Broken layout → add: the specific viewport, the expected result, a reference component that works, and "Fix order: adjust value → change approach → override specificity → inspect computed → restructure component"
+
+Ugly result → add: design tokens reference (globals.css, CSS variables), named design references (products that do it well), and "Evaluate as a user: professional? proud to ship?"
+
+No evidence → add: "List every screenshot filename. State verdict: READY or NOT READY with file:line for each issue."

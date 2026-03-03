@@ -1,0 +1,70 @@
+---
+description: "Execution tracking — pipeline discipline for the orchestrator during multi-step execution"
+alwaysApply: true
+---
+
+# Execution Tracking — Pipeline Discipline
+
+When running a pipeline, follow this protocol to track progress, verify each step, and catch failures before they compound.
+
+## Hard gate
+
+- A step is not complete until its evidence is validated against the acceptance criteria.
+- If gates (lint, type-check, test, build) are not all green, the step stays open.
+- If acceptance criteria are partially met, the step stays open — partial is not done.
+
+## Before delegating each step
+
+- [ ] Re-read the plan (`.whytcard/projects/{id}/plans/`) — do not rely on memory
+- [ ] Confirm which step you are on from the pipeline state
+- [ ] Verify that the previous step's evidence was validated
+- [ ] Write instruction.md and acceptance.md for the current step
+
+## After receiving agent output
+
+- [ ] Scope: did the agent only touch files within the declared scope?
+- [ ] Gates: lint, type-check, test, build — all green?
+- [ ] Acceptance: every criterion in acceptance.md satisfied?
+- [ ] Quality: no shortcuts, no placeholders, no mocks where real integrations were specified?
+- [ ] Update pipeline state in `.whytcard/projects/{id}/pipeline/`
+
+## On PASS
+
+Mark step completed. Log evidence. Move to next step.
+
+## On FAIL
+
+1. Read the gate logs and patch diff — identify root cause
+2. Classify: code bug? ambiguous instruction? missing prerequisite?
+3. Improve instruction.md — add the missing constraint, provide an example, or split the step
+4. Re-delegate with the corrected instruction to a fresh agent
+5. The corrected instruction prevents this failure in future pipelines
+
+## Red flags
+
+These patterns signal that execution discipline is breaking down:
+
+- Building files not listed in the current increment — the agent is drifting from scope
+- Skipping verification steps — speed without proof creates hidden debt
+- Not updating the execution log — the pipeline loses its memory
+- Making design decisions that should have been in the plan — execution is not the time for architecture
+- Working from memory instead of re-reading plan/log files — memory drifts, files don't
+
+When you spot these in an agent's output, the fix is in the instruction: add explicit scope constraints, require verification evidence, or split the step into smaller actions.
+
+## Session continuity
+
+If the session gets long:
+1. Complete the current step fully
+2. Update pipeline state with current position
+3. Document clearly so a new session can resume exactly where you stopped
+
+## How to improve the instruction
+
+Agent touched out-of-scope files → add: "You may ONLY modify files in [explicit list]. Do not touch anything else."
+
+Agent skipped verification → add: "After completing the change, run [lint/test/build command] and include the full output in your evidence."
+
+Agent made architecture decisions → add: "Follow the design exactly as specified in instruction.md. If you see a better approach, document it in notes.md but do not implement it."
+
+Agent worked from stale context → add: "Before starting, read [specific file paths] to get current state. Do not assume anything from prior context."

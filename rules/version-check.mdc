@@ -1,0 +1,64 @@
+---
+description: "Version check evaluation grid — how to judge if an agent properly verified dependencies before adding them"
+alwaysApply: true
+---
+
+# Version Check — Evaluation Grid
+
+When an agent added or changed packages, use this grid to evaluate. If any check fails, improve the instruction and re-delegate.
+
+## Hard gate
+
+- No install or update recommendation without a verified version from a live source.
+- If no reliable source is found, mark the dependency decision as UNVERIFIED — do not proceed.
+- This grid must be applied together with `research-first.mdc` for architecture and package choices.
+
+## Checklist
+
+- [ ] Version is the latest stable release (verified via live search, not memory)
+- [ ] Last publish date < 1 year (package is maintained)
+- [ ] At least 1 alternative was compared
+- [ ] Bundle size checked (frontend: < 50KB good, < 200KB acceptable, > 200KB needs justification)
+- [ ] TypeScript support verified (native types preferred)
+- [ ] No duplicate functionality with existing dependencies
+
+## Health indicators
+
+| Factor | Good | Warning | Bad |
+| -------- | ------ | --------- | ----- |
+| Last publish | < 3 months | 3-12 months | > 1 year |
+| Open issues | < 50 | 50-200 | > 200 |
+| Downloads | Growing | Stable | Declining |
+| Bundle size | < 50KB | 50-200KB | > 200KB |
+| TypeScript | Native types | @types pkg | No types |
+
+## Minimum evidence required
+
+An agent's dependency recommendation is only valid when it includes:
+
+- At least 2 sources per new dependency (official docs + one independent source)
+- One concrete reason for choosing this dependency over the top alternative
+- One concrete risk or caveat for future maintainers
+
+Without all three, the recommendation is incomplete — improve the instruction and re-delegate.
+
+## Red flags in agent output
+
+- Version number stated without a source URL → agent guessed from memory
+- Package installed without mentioning alternatives → no comparison done
+- No publish date or maintenance check → agent skipped health verification
+- New package duplicates existing dependency functionality → agent didn't audit deps first
+
+## How to improve the instruction
+
+Missing version check → add: "Before installing, search '[package] latest version [current year]' and cite the source"
+
+No comparison → add: "Compare with at least one alternative: '[category] best package [current year]'"
+
+No health check → add: "Verify: last publish date, open issues trend, download trend"
+
+Frontend bundle concern → add: "Check bundle size at bundlephobia and report the number"
+
+Output format → add: "State clearly: package@version, why over [alternative], one caveat for maintainers"
+
+No evidence → add: "Cite at least 2 sources: the official docs and one independent review or benchmark. State one risk for future maintainers."

@@ -1,0 +1,10 @@
+# Normalize line endings in repo (avoid CRLF/LF noise)
+* text=auto
+
+# Keep scripts and config consistent
+*.js   text eol=lf
+*.md   text eol=lf
+*.mdc  text eol=lf
+*.json text eol=lf
+*.ps1  text eol=lf
+

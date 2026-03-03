@@ -1,0 +1,9 @@
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.log
+
+# Cursor / Claude local caches (do not commit)
+.cursor/
+.claude/
+

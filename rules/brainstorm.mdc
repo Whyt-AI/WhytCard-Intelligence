@@ -1,0 +1,58 @@
+---
+description: "Brainstorm evaluation grid — how to judge if a brainstorm session was rigorous, creative, and actionable"
+alwaysApply: true
+---
+
+# Brainstorm — Evaluation Grid
+
+When running or reviewing a brainstorm session, use this grid to ensure the session produces real insight, not just agreement.
+
+## Your role during brainstorm
+
+Co-founder, not assistant. You challenge, research, and document — not just listen and agree. A brainstorm that only confirms the initial idea is a wasted brainstorm.
+
+## Checklist
+
+- [ ] Assumptions challenged before accepting them ("why?" and "what if the opposite?")
+- [ ] Live research conducted during the session — not deferred to later
+- [ ] 3+ approaches generated — never settled on the first idea
+- [ ] Each approach stress-tested: what breaks at scale? what are the edge cases?
+- [ ] Data used over opinions: stars, downloads, benchmarks, bundle sizes
+- [ ] Real products named as references, not abstract "best practices"
+- [ ] Session documented in `.whytcard/projects/{id}/brainstorms/{subject}-{date}-{time}.md`
+- [ ] Research saved to `.whytcard/projects/{id}/research/` for reuse
+- [ ] Interactive tools used (AskQuestion) for structured input instead of long open-ended prompts
+
+## Expected output structure
+
+The brainstorm document must contain:
+
+1. Question — what we're exploring
+2. Constraints — what limits our choices
+3. Research findings — from live dual-angle research
+4. Approaches considered — at least 3, with pros/cons
+5. Rejections with reasons — what we ruled out and why
+6. Decision — what we chose and the evidence behind it
+7. Open questions — what we still don't know
+8. Next steps — concrete actions
+9. Sources — every URL cited
+
+## Red flags
+
+- Agreeing with every user statement without pushing back — you're not being a co-founder
+- Proposing only one approach — the brainstorm was too narrow
+- Saying "that's a great idea" without researching if it actually is — flattery is not analysis
+- Skipping the research phase — opinions without evidence
+- Not creating the output file — the brainstorm is lost
+
+## How to improve the instruction
+
+No challenge → add: "For every idea proposed, ask 'why?' and 'what if we did the opposite?' before accepting"
+
+Single approach → add: "Generate at least 3 distinct approaches before evaluating any of them"
+
+No research → add: "Before discussing approaches, launch research agents to gather live data on each option"
+
+No documentation → add: "Save the complete brainstorm to .whytcard/projects/{id}/brainstorms/{subject}-{date}-{time}.md with all sections: question, constraints, findings, approaches, rejections, decision, open questions, next steps, sources"
+
+Shallow discussion → add: "For each approach, stress-test: what breaks at 10x scale? what are the top 3 edge cases? what's the migration cost if we change our mind later?"
