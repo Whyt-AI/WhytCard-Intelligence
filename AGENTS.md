@@ -1,28 +1,66 @@
-# How to create and manage agents
+# How to create and manage subagents
 
-You are the orchestrator. Your agents are your arms. This document teaches you how to create them, form them, delegate to them, and learn from their results.
+You are the orchestrator. Your subagents are your arms. This document defines how to delegate specialized work without losing accuracy, traceability, or platform realism.
 
-## When to create an agent
+## Official-first model
 
-Create an agent when:
-- The task involves writing or modifying code
-- The task involves deep research across multiple sources
-- The task involves reading a large number of files
-- The task would consume significant context window
+Use official Cursor and Claude Code documentation as the primary model.
 
-Do NOT create an agent when:
-- The task is a quick question to the user
-- The task is a simple file read you need for decision-making
-- The overhead of delegation exceeds the work itself
+- Cursor and Claude Code both support subagents, hooks, and command-like workflows.
+- They are not perfectly symmetrical products.
+- Community reports are useful only as clearly labeled caveats.
 
-## How to create an agent (Cursor)
+## Read exhaustively before claiming understanding
 
-Write a `.md` file in `.cursor/agents/` with YAML frontmatter:
+If the user asks you to read an entire corpus, this is a hard rule:
+
+1. Enumerate the requested files, folders, or URLs.
+2. Read every requested item before claiming full understanding.
+3. State precisely what has been read and what remains unread.
+4. Never imply completion after a partial read.
+
+Forbidden behavior:
+
+- "I read everything" after reading only part of the corpus
+- "I fully understand the docs" before all requested docs were read
+- vague statements that hide partial coverage
+
+Required behavior:
+
+- "I have read A, B, and C. I have not yet read D and E."
+
+## When to create a subagent
+
+Create a subagent when:
+
+- the task involves writing or modifying code
+- the task involves deep research across multiple official sources
+- the task involves reading many files
+- the task would consume too much context in the main thread
+
+Do not create a subagent when:
+
+- the task is a quick question to the user
+- a small direct file read is enough for a decision
+- the delegation overhead is larger than the work
+
+## Where subagents live
+
+Use the host-appropriate location:
+
+- Cursor example: `.cursor/agents/`
+- Claude Code example: `.claude/agents/`
+
+This repo uses Cursor-style examples by default, but the concept is the same: a markdown file with YAML frontmatter, a strong description, and explicit tool scope.
+
+## How to define a subagent
+
+Write a markdown file with YAML frontmatter:
 
 ```markdown
 ---
 name: agent-name
-description: What this agent does and when to delegate to it. Be specific.
+description: What this subagent does and when to delegate to it.
 model: inherit
 readonly: false
 tools:
@@ -38,138 +76,147 @@ tools:
 You are [role]. Your mission is [one sentence].
 
 ## Context
-[Why this task matters in the larger project]
+[Why this micro-action matters]
 
-## Your task
-[The specific micro-action to perform]
+## Task
+[The exact action]
 
 ## Scope
-[Exact files/globs you may touch — nothing outside this]
+[Exact files or globs allowed]
 
 ## Quality bar
-- 0 errors, 0 warnings
-- No dead code, no duplication
-- No mocks — real integrations
-- Evidence written to evidence/
+- 0 errors
+- 0 warnings
+- No dead code
+- No placeholder shortcuts
+- Evidence written to the declared path
 
-## When done
-[Acceptance criteria checklist]
+## Done when
+[Observable checklist]
 ```
 
 ### Key fields
 
 | Field | Purpose |
-|-------|---------|
-| `name` | Lowercase, hyphens only. Unique identifier. |
-| `description` | Critical for delegation. Include trigger terms. |
-| `readonly` | `true` for research/review agents. `false` for code agents. |
-| `tools` | Only grant what the agent needs. Research agents don't need Edit. |
+| --- | --- |
+| `name` | Lowercase, kebab-case identifier. |
+| `description` | Routing signal. State trigger terms and boundaries. |
+| `readonly` | `true` for research/review only. |
+| `tools` | Grant only what is required. |
 
-## How to form an agent
+## How to form a good instruction
 
-A well-formed agent succeeds on the first try. A poorly-formed agent fails and wastes time.
+A good subagent instruction teaches both the `what` and the `why`.
 
-### Teach the why, not just the what
+Include:
 
-Bad instruction:
-```
-Create a login form in src/components/Login.tsx
-```
+- why the step matters
+- the official docs or repo patterns already verified
+- exact scope
+- acceptance criteria
+- required outputs and evidence paths
 
-Good instruction:
-```
-The authentication system uses magic links via Resend (see package.json).
-Users expect a clean, minimal login experience — email field + submit button.
-The form should call POST /api/auth/send-link and handle loading/error/success states.
-Follow the existing component pattern in src/components/Dashboard.tsx for styling conventions.
-Create src/components/Login.tsx.
-```
+Do not send context-free one-liners when the subagent needs project judgment.
 
-The difference: the good instruction gives the agent everything it needs to make correct judgment calls at the edges.
+## Tool profiles
 
-### Give context, not commands
-
-- Why this step matters in the pipeline (one sentence)
-- Relevant documentation links you verified during research
-- Code patterns from the existing codebase the agent should follow
-- Examples of expected output when helpful
-- Quality bar: 0 errors, 0 warnings, no placeholders, no shortcuts
-
-### Set the right tool permissions
-
-| Agent type | readonly | Tools |
-|-----------|----------|-------|
-| Research | true | Read, Glob, Grep, WebSearch, WebFetch |
-| Code review | true | Read, Glob, Grep, Bash |
+| Type | readonly | Typical tools |
+| --- | --- | --- |
+| Research | true | Read, Glob, Grep, WebSearch |
+| Review | true | Read, Glob, Grep, Bash |
 | Implementation | false | Read, Glob, Grep, Edit, Write, Bash, WebSearch |
-| Visual check | true | Read, Bash (for screenshots) |
+| Visual verification | true | Read, Bash |
 
-## The delegation contract
+## Canonical `.whytcard` contract
 
-For every micro-action you delegate, produce these artifacts:
+Project knowledge lives in `.whytcard/projects/{projectId}/`.
 
-### Before delegation (you write)
+Base scaffold:
 
-In `.whytcard/projects/{projectId}/pipeline/steps/{stepId}/`:
+- `00_orchestrator/`
+- `01_foundation/steps/S001-project-scaffold/`
 
-| File | Content |
-|------|---------|
-| `instruction.md` | What to do. Single micro-action, scope, constraints, context. |
-| `acceptance.md` | What "done" means. Observable, testable checklist. |
+Canonical working directories:
 
-### After delegation (agent writes)
+- `pipeline/steps/`
+- `research/`
+- `brainstorms/`
+- `plans/`
+- `reviews/`
+- `proofs/`
 
-In the step's `evidence/` directory:
+Use `pipeline/steps/` for real execution work. Do not create new documentation that points to legacy numbered phase folders.
 
-| File | Content |
-|------|---------|
-| `patch.diff` | Output of `git diff` for the change |
-| `gate.log` | Stdout/stderr of gate commands (lint, type-check, test, build) |
-| `notes.md` | Optional. Non-obvious tradeoffs, scope concerns, suggestions. |
+## Delegation contract
 
-## The review cycle
+Before delegation, write:
 
-After an agent delivers:
+- `.whytcard/projects/{projectId}/pipeline/steps/{stepId}/instruction.md`
+- `.whytcard/projects/{projectId}/pipeline/steps/{stepId}/acceptance.md`
 
-1. **Check scope** — Did it only touch files within the declared scope?
-2. **Check gates** — Are lint, type-check, test, build all green?
-3. **Check acceptance** — Is every criterion in acceptance.md satisfied?
-4. **Check quality** — No shortcuts, no placeholders, no mocks where real integrations were specified?
+After delegation, collect in the step `evidence/` directory:
 
-### On PASS
-Mark the step as completed. Move to the next step.
+- `patch.diff`
+- `gate.log`
+- `notes.md` when needed
 
-### On FAIL
-This is where your creativity matters most.
+Repo-level research, plans, reviews, and final proofs belong in their canonical top-level directories under the same project.
 
-1. Read the gate logs and patch diff. Identify the root cause.
-2. Is it a code bug, an ambiguous instruction, or a missing prerequisite?
-3. Improve `instruction.md` — make it more precise, add a missing constraint, provide an example, or split the step further.
-4. Re-delegate with the corrected instruction. A fresh agent reads the improved instruction.
-5. The pipeline learns: the corrected instruction prevents the same failure in future projects.
+## Review cycle
+
+After a subagent returns:
+
+1. Check scope.
+2. Check gates.
+3. Check acceptance.
+4. Check quality.
+5. Check that claims are backed by named evidence paths.
+
+On pass:
+
+- mark the step complete
+- keep the proof
+- move to the next step
+
+On fail:
+
+1. identify whether the problem is code, instruction quality, or missing prerequisites
+2. improve `instruction.md`
+3. re-delegate to a fresh subagent
 
 ## Parallel execution
 
-Sequential is the default. Parallel only when ALL of these are true:
-- Different file scopes (no shared files)
-- Different responsibilities (no shared functionality)
-- Independent acceptance criteria
-- No shared build/test artifacts that could race
+Parallelize only when all of the following are true:
 
-If uncertain: sequential.
+- file scopes do not overlap
+- responsibilities do not overlap
+- acceptance criteria are independent
+- build/test artifacts cannot race
 
-## Using skills as agent manuals
+If uncertain, run sequentially.
 
-Skills in `skills/` are instruction manuals for your agents. When you create an agent for web research, reference `skills/search-web/SKILL.md`. When you create an agent for code review, reference `skills/review-codebase/SKILL.md`.
+## Skills are the manuals
 
-The skill teaches the agent HOW to do the work. Your instruction teaches it WHAT to do and WHY.
+Skills in `skills/` are the operating manuals for subagents.
+
+Examples:
+
+- web research: `skills/wi-search-web/SKILL.md`
+- code review: `skills/wi-review-codebase/SKILL.md`
+- feature work: `skills/wi-add-feature/SKILL.md`
+
+The skill teaches `how`. Your instruction teaches `what`, `why`, and `where`.
+
+## Plugin operating wrappers
+
+These wrappers are plugin conventions, not host-platform modes:
+
+- `interactive`
+- `autopilot-safe`
+- `autopilot-full`
+
+Use them in docs and command wrappers, but do not confuse them with Cursor's official Ask/Agent/Plan/Debug modes or Claude Code's official CLI/settings model.
 
 ## Context economy
 
-Every agent runs in an isolated context. When it finishes, its context is discarded. Only the results come back to you.
-
-This means:
-- Your context stays clean — you keep the big picture
-- Agents can go deep into code without polluting your view
-- You can run 10 steps and still remember the original objective
-- Failed agents cost nothing — just re-delegate with better instructions
+Each subagent gets an isolated context window. Keep the main thread focused on synthesis, verification, and instruction quality.

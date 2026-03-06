@@ -1,6 +1,24 @@
 ---
-description: "Review the codebase (quality/security/perf/tests) — uses the wi-review-codebase skill."
+description: "Review a codebase across quality, security, perf, and tests. Uses wi-review-codebase."
 disable-model-invocation: true
 ---
 
-Invoke the `wi-review-codebase` skill and follow it exactly.
+# /wi-review-codebase
+
+Mode: `interactive`
+
+Use when the user wants an audit or review instead of immediate implementation.
+
+Invoke `wi-review-codebase` and follow it exactly.
+
+Return:
+
+- prioritized findings
+- evidence-backed reasoning
+- review output in `.whytcard/projects/{id}/reviews/` when project-scoped
+
+Non-negotiables:
+
+- findings first, summary second
+- official platform behavior and community caveats must stay separate
+- do not claim exhaustive understanding after partial reading

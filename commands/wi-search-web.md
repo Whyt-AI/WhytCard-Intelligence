@@ -1,13 +1,26 @@
 ---
-description: "Web research (good/bad angle + data) — uses the wi-search-web skill."
+description: "Run structured web research with official docs, caveats, and data. Uses wi-search-web."
 disable-model-invocation: true
 ---
 
-Invoke the `wi-search-web` skill and enforce its hard contract:
+# /wi-search-web
 
-- Run at least 3 distinct queries: good angle, bad/community angle, data angle.
-- Do not recommend anything without 1 official source, 1 bad/community source, 1 data source, and 3+ distinct sources total.
-- Return explicit `Confidence: HIGH|MEDIUM|LOW`.
-- Return explicit `Unknowns`.
-- Return a final `Sources` list.
-- If in project context, save the research in `.whytcard/projects/{id}/research/`.
+Mode: `interactive`
+
+Use when you need current external information before making a decision.
+
+Invoke `wi-search-web` and follow it exactly.
+
+Return:
+
+- at least one official source
+- clearly separated non-official caveats
+- explicit confidence, unknowns, and source list
+- research output in `.whytcard/projects/{id}/research/` when project-scoped
+
+Non-negotiables:
+
+- official docs first
+- community findings must remain labeled as caveats
+- no recommendation without evidence
+- do not claim exhaustive understanding after partial reading

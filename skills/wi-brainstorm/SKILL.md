@@ -5,27 +5,42 @@ description: Interactive brainstorm session with the user. Launch research agent
 
 # Brainstorm
 
-Interactive session. You (the orchestrator) and the user are the brain. Your research agents are your arms gathering information.
+Mode: `interactive`
+
+Interactive session. You and the user are the brain. Research subagents gather the missing information.
+
+## Hard contract
+
+- Official docs are the primary source.
+- Community posts are allowed only as clearly labeled caveats.
+- If the user requested exhaustive reading, list the requested corpus and do not claim full understanding until all requested items were read.
+- Produce at least 3 approaches unless the user explicitly narrows the scope.
 
 ## Workflow
 
-### 1. Identify research axes
+### 1. Read the required context
+
+Before brainstorming, read the requested repo and documentation context that is required for a trustworthy discussion.
+
+If the reading is incomplete, say exactly what remains unread.
+
+### 2. Identify research axes
 
 From the user's request, extract 2-4 research questions that need answers before deciding on an approach. Ask the user if the axes look right.
 
-### 2. Launch research agents in parallel
+### 3. Launch research subagents in parallel
 
-For each axis, create and launch a research agent:
+For each axis, create and launch a research subagent:
 
-- **Codebase agent** — Explore the existing code for relevant patterns, conventions, dependencies
-- **Web research agent** — Search for current best practices, alternatives, known pitfalls (use the wi-search-web skill)
-- **Stack research agent** — If technology choices are involved, compare options with real data (use the wi-research-stack skill)
+- **Codebase subagent** - Explore the existing code for relevant patterns, conventions, dependencies
+- **Web research subagent** - Search for official docs first, then alternatives and caveats (use the `wi-search-web` skill)
+- **Stack research subagent** - If technology choices are involved, compare options with real data (use the `wi-research-stack` skill)
 
 Launch them in parallel. Each runs in an isolated context. Your context stays clean.
 
 Save each research result to `.whytcard/projects/{id}/research/{topic}-{axis}-{date}.md`.
 
-### 3. Build approaches
+### 4. Build approaches
 
 Before any decision, define at least 3 distinct approaches.
 
@@ -39,37 +54,38 @@ For each approach, capture:
 
 Do not converge on a decision with fewer than 3 approaches unless the user explicitly narrows the scope.
 
-### 4. Stress-test and discuss
+### 5. Stress-test and discuss
 
-When agents return:
+When subagents return:
 
 - Synthesize findings into a clear summary
 - Present at least 3 approaches to the user with your analysis
 - Highlight trade-offs, risks, and recommendations
-- Challenge weak assumptions — yours and the user's
+- Challenge weak assumptions - yours and the user's
+- Separate official platform behavior from community caveats
 - Stress-test each approach on:
   - Scale and growth
   - Edge cases and failure modes
   - Migration cost and rollback complexity
   - Operational burden and maintenance cost
 
-### 5. Iterate
+### 6. Iterate
 
 The user may redirect:
 
-- "What about X instead?" → Launch a new research agent
-- "I don't want mocks" → Note the constraint, adjust approach
-- "Compare A vs B" → Launch a stack research agent
+- "What about X instead?" -> Launch a new research subagent
+- "I don't want mocks" -> Note the constraint, adjust approach
+- "Compare A vs B" -> Launch a stack research subagent
 
 Keep going until you both converge.
 
-### 6. Produce output
+### 7. Produce output
 
 When the brainstorm converges:
 
 - Write the brainstorm document to `.whytcard/projects/{id}/brainstorms/{topic}-{date}.md`
 - Create the implementation plan in `.whytcard/projects/{id}/plans/{topic}-{date}.md`
-- The plan contains the micro-action pipeline ready for agent execution
+- The plan contains the micro-action pipeline ready for execution under `.whytcard/projects/{id}/pipeline/steps/`
 
 ## Brainstorm document format
 
@@ -80,7 +96,13 @@ When the brainstorm converges:
 {The core question we explored}
 
 ## Research findings
-{Summarized agent findings with sources}
+{Summarized subagent findings with sources}
+
+## Official behavior
+{What the official docs say}
+
+## Community caveats
+{Useful caveats, clearly labeled as non-official}
 
 ## Approaches considered
 ### Approach 1
@@ -110,5 +132,5 @@ When the brainstorm converges:
 3. {Source}
 
 ## Next steps
-{Link to the plan}
+{Link to the plan and expected `pipeline/steps/` entries}
 ```
