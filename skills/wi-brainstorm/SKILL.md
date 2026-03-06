@@ -23,16 +23,37 @@ For each axis, create and launch a research agent:
 
 Launch them in parallel. Each runs in an isolated context. Your context stays clean.
 
-### 3. Present and discuss
+Save each research result to `.whytcard/projects/{id}/research/{topic}-{axis}-{date}.md`.
+
+### 3. Build approaches
+
+Before any decision, define at least 3 distinct approaches.
+
+For each approach, capture:
+
+- What it is
+- Why it fits
+- Why it can fail
+- Dependencies/prerequisites
+- Migration cost
+
+Do not converge on a decision with fewer than 3 approaches unless the user explicitly narrows the scope.
+
+### 4. Stress-test and discuss
 
 When agents return:
 
 - Synthesize findings into a clear summary
-- Present to the user with your analysis
+- Present at least 3 approaches to the user with your analysis
 - Highlight trade-offs, risks, and recommendations
 - Challenge weak assumptions — yours and the user's
+- Stress-test each approach on:
+  - Scale and growth
+  - Edge cases and failure modes
+  - Migration cost and rollback complexity
+  - Operational burden and maintenance cost
 
-### 4. Iterate
+### 5. Iterate
 
 The user may redirect:
 
@@ -42,7 +63,7 @@ The user may redirect:
 
 Keep going until you both converge.
 
-### 5. Produce output
+### 6. Produce output
 
 When the brainstorm converges:
 
@@ -61,14 +82,32 @@ When the brainstorm converges:
 ## Research findings
 {Summarized agent findings with sources}
 
-## Options considered
-{Each option with pros/cons/data}
+## Approaches considered
+### Approach 1
+{Description, pros, cons, data, risks}
+
+### Approach 2
+{Description, pros, cons, data, risks}
+
+### Approach 3
+{Description, pros, cons, data, risks}
 
 ## Decision
 {What we chose and why}
 
+## Rejections
+- {Approach rejected and why}
+
 ## Constraints
 {Non-negotiables from the user}
+
+## Open questions
+- {What still needs confirmation}
+
+## Sources
+1. {Source}
+2. {Source}
+3. {Source}
 
 ## Next steps
 {Link to the plan}

@@ -11,8 +11,9 @@ This skill is the **single entry point** that chains the core skills **in order*
 
 - Do **not** ask the user questions by default.
 - Proceed with explicit assumptions when something is unclear; record them in the brainstorm document.
-- Only ask if blocked by missing credentials/prerequisites or an irreversible product decision.
+- Ask at most one question, and only if blocked by missing credentials/prerequisites, an irreversible decision, or a critical ambiguity that would invalidate the work.
 - Do not use bypasses that hide problems (no “ignore/noCheck/passWithNoTests” style shortcuts).
+- Do not block on approval for reversible optimizations; escalate only irreversible or destructive decisions.
 
 ## Default scope guard (important)
 
@@ -38,7 +39,8 @@ Focus on making the project **build + run + lint + type-check + test** cleanly w
 ### 2) Improve project (create + execute pipeline)
 
 - Follow the same workflow as `wi-improve-project`, but in **autopilot**:
-  - Do not pause for “approval”; treat the prioritized list as approved by default unless it triggers a stop condition.
+  - Do not pause for approval on reversible improvements; treat them as approved by default.
+  - Escalate only irreversible or destructive changes, or when a single critical ambiguity blocks safe execution.
 - Create steps under:
   - `.whytcard/projects/{id}/02_improvements/steps/`
 - Execute each step with evidence captured in each step’s `evidence/` folder.

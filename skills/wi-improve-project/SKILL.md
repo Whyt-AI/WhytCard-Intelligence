@@ -7,6 +7,12 @@ description: Autonomously audit and improve an existing project. Identifies prob
 
 Autopilot mode. You audit the existing codebase and systematically improve it.
 
+## Non-negotiables
+
+- Do not stop for approval on reversible improvements.
+- Ask at most one question, and only if blocked by missing prerequisites, an irreversible/destructive decision, or a critical ambiguity.
+- Proceed with explicit assumptions when safe; record them in the plan/pipeline artifacts.
+
 ## Workflow
 
 ### 0. Ensure per-project KB structure exists
@@ -28,7 +34,7 @@ From audit results, create a prioritized list:
 - **MAJOR** — Should fix. Performance bottlenecks, significant tech debt.
 - **MINOR** — Nice to fix. Code style, minor optimizations.
 
-Present to the user for approval. They may reorder or exclude items.
+Treat reversible improvements as approved by default. Escalate to the user only for irreversible or destructive decisions such as data/schema migrations, public API breaks, auth/billing commitments, vendor lock-in, or deletions that are hard to undo.
 
 ### 3. Create the pipeline
 
