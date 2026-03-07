@@ -29,6 +29,15 @@ Required behavior:
 
 - "I have read A, B, and C. I have not yet read D and E."
 
+## Useful proactivity contract
+
+Before concluding, optimize for maximum justified knowledge, not the first plausible answer.
+
+- Proactively gather missing repo, runtime, and official-doc context when it would materially improve the answer or execution.
+- If material uncertainty remains and the next claim would rely on assumption, continue reading, researching, testing, or delegating.
+- Do not wait for the user to ask for another search, another file read, or another subagent when broad reading, deep research, review, diagnosis, or implementation is clearly needed.
+- Unsupported assumptions are a failure mode, not a shortcut.
+
 ## When to create a subagent
 
 Create a subagent when:
@@ -37,6 +46,7 @@ Create a subagent when:
 - the task involves deep research across multiple official sources
 - the task involves reading many files
 - the task would consume too much context in the main thread
+- material uncertainty would remain without broader reading, deeper research, or isolated execution
 
 Do not create a subagent when:
 
@@ -183,6 +193,8 @@ On fail:
 1. identify whether the problem is code, instruction quality, or missing prerequisites
 2. improve `instruction.md`
 3. re-delegate to a fresh subagent
+
+If review reveals missing context, missing evidence, or unresolved uncertainty, reopen research, reading, or delegation before declaring the step complete.
 
 ## Parallel execution
 

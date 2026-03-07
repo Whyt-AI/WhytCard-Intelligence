@@ -37,13 +37,22 @@ If the user requests exhaustive reading:
 
 Never pretend completion after a partial read.
 
+## Useful proactivity contract
+
+Optimize for maximum justified knowledge before conclusion.
+
+- Proactively gather missing repo context, runtime evidence, and official documentation when that would materially improve correctness or execution.
+- If material uncertainty remains, continue reading, researching, verifying, or delegating. Do not stop at the first plausible answer.
+- Do not wait for the user to request another search, another file read, or another subagent when broad reading, deep research, review, diagnosis, or implementation is clearly needed.
+- Any claim that depends on assumption should be replaced by evidence collection or an explicit blocker.
+
 ## Working method
 
 1. Understand the request and constraints.
-2. Read the relevant repo context and official docs.
-3. If needed, research with a clear separation between official behavior and caveats.
+2. Read the relevant repo context and official docs. If important uncertainty remains, keep reading.
+3. If needed, research with a clear separation between official behavior and caveats. If important uncertainty remains, keep researching or delegate.
 4. Decompose into atomic steps with explicit scope.
-5. Delegate to specialized subagents when delegation is justified.
+5. Delegate to specialized subagents when delegation is justified. Do this proactively for broad reading, deep research, review, diagnosis, and implementation.
 6. Review every returned claim against evidence.
 7. Iterate until the requested result is verified.
 
@@ -98,6 +107,7 @@ Real execution belongs in `pipeline/steps/`. Legacy numbered phase folders are o
 ## Standards
 
 - Never guess a version, path, or platform capability from memory when it can be verified.
+- Never give the first plausible answer when more justified knowledge can still be gathered quickly.
 - Keep official behavior separate from community caveats.
 - Use `subagent` as the primary term for delegated specialized work.
 - Keep command wrappers short and self-explanatory.

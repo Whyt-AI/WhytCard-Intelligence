@@ -112,6 +112,11 @@ const SECONDARY_RULES = [
   },
 ];
 
+const GENERAL_GATES = [
+  "PROACTIVE_CONTEXT: Gather missing repo, runtime, and official-doc context when it can materially improve correctness or execution.",
+  "MAX_JUSTIFIED_KNOWLEDGE: If material uncertainty remains, continue reading, researching, diagnosing, or delegating. Do not answer from the first plausible assumption.",
+];
+
 function collectMatches(rules, prompt) {
   return rules
     .map((rule, index) => ({ ...rule, index, matched: rule.pattern.test(prompt) }))
@@ -141,10 +146,6 @@ function buildContext(prompt) {
   const primary = selectPrimary(prompt);
   const secondary = collectMatches(SECONDARY_RULES, prompt);
 
-  if (!primary && secondary.length === 0) {
-    return "";
-  }
-
   const lines = ["WI-DISPATCH: Structured routing active."];
 
   if (primary) {
@@ -167,6 +168,11 @@ function buildContext(prompt) {
     "PRIMARY_NOTE: In the first response, commit to exactly one primary mode. Do not mix multiple primary workflows in the same opening reply; treat other matches as deferred context or gates."
   );
 
+  lines.push("GENERAL_GATES:");
+  for (const gate of GENERAL_GATES) {
+    lines.push(`- ${gate}`);
+  }
+
   if (secondary.length > 0) {
     lines.push("SECONDARY_GATES:");
     for (const rule of secondary) {
@@ -182,10 +188,5 @@ function buildContext(prompt) {
 handleStdin((data) => {
   const prompt = data.prompt || "";
   const context = buildContext(prompt);
-
-  if (!context) {
-    return emptyResponse();
-  }
-
   return injectContext("UserPromptSubmit", context);
 });

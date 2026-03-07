@@ -12,6 +12,7 @@ When running a pipeline, follow this protocol to track progress, verify each ste
 - If gates (lint, type-check, test, build) are not all green, the step stays open.
 - If acceptance criteria are partially met, the step stays open - partial is not done.
 - If the user requested exhaustive reading, the corpus is not fully understood until every requested item has been read and logged.
+- If a step depended on broad reading, research, or diagnosis, the context-gathering evidence must exist before the step can close.
 
 ## Before delegating each step
 
@@ -21,6 +22,7 @@ When running a pipeline, follow this protocol to track progress, verify each ste
 - [ ] Write instruction.md and acceptance.md for the current step
 - [ ] Keep a read ledger when exhaustive reading was requested
 - [ ] Use the canonical `.whytcard/projects/{id}/` layout for every new artifact
+- [ ] If material uncertainty remains, schedule another read/research/delegation loop before execution
 
 ## After receiving subagent output
 
@@ -31,6 +33,7 @@ When running a pipeline, follow this protocol to track progress, verify each ste
 - [ ] Update pipeline state in `.whytcard/projects/{id}/pipeline/`
 - [ ] Verify that any claim of "fully read" or "fully understood" matches the read ledger
 - [ ] Verify that execution steps live under `pipeline/steps/`, not legacy phase families
+- [ ] Verify that any context-dependent conclusion is backed by actual reads, research, or diagnostics rather than assumption
 
 ## On PASS
 
@@ -55,6 +58,7 @@ These patterns signal that execution discipline is breaking down:
 - Working from memory instead of re-reading plan/log files - memory drifts, files do not
 - Claiming exhaustive reading after a partial read
 - Writing execution steps outside `pipeline/steps/`
+- Closing a step while important uncertainty is still unresolved
 
 When you spot these in a subagent's output, the fix is in the instruction: add explicit scope constraints, require verification evidence, or split the step into smaller actions.
 
