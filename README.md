@@ -1,18 +1,13 @@
 # WhytCard Intelligence
 
-Practical orchestration plugin for Cursor and Claude Code.
+Practical orchestration plugin for Cursor.
 
 The plugin teaches an orchestrator to research first, delegate to specialized subagents, keep proof, and iterate until the result is actually validated.
 
 ## Platform model: official surfaces first
 
-This repo documents two different host products with overlapping but non-identical features.
-
-- Cursor official concepts: Ask, Agent, Plan, Debug, subagents, hooks, plugins, rules, skills/commands, and Cloud Agents.
-- Claude Code official concepts: interactive CLI workflows, settings scopes, subagents, hooks, skills/slash commands, plugins, and CLI configuration.
-- This plugin adds its own operating wrappers on top: `interactive`, `autopilot-safe`, and `autopilot-full`.
-
-Do not present Cursor and Claude Code as perfectly symmetrical surfaces. Some concepts overlap, but the install paths, manifests, hook wiring, and UX differ.
+Cursor official concepts: Ask, Agent, Plan, Debug, subagents, hooks, plugins, rules, skills/commands, and Cloud Agents.
+This plugin adds its own operating wrappers on top: `interactive`, `autopilot-safe`, and `autopilot-full`.
 
 ## Plugin operating wrappers
 
@@ -63,13 +58,16 @@ Partial reading is acceptable only if you label it precisely as partial.
 ## Installation
 
 Use `INSTALL.md` for the actual install flow, manifest behavior, and hook wiring details.
+Use `AGENT.md` for the automated plug-and-play setup runbook.
 
 Quick start:
 
 - Windows: `.\scripts\install-plugin.ps1`
 - Linux/macOS: `bash ./scripts/install-plugin.sh`
 
-Then reload Cursor or restart the host tool.
+Then reload Cursor.
+
+The installer is Cursor-only and also cleans known legacy conflicts (`whytcardAI-plugin` hooks/rules) so only current `whytcard-intelligence` behavior remains active.
 
 ## Quick verification
 
@@ -84,4 +82,3 @@ Internal docs stay in English. When interacting with Jerome, the orchestrator sp
 ## License
 
 MIT. See `LICENSE`.
-

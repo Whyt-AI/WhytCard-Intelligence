@@ -3,7 +3,6 @@
 
 $ErrorActionPreference = "Stop"
 $PluginName = "whytcard-intelligence"
-$PluginId = "${PluginName}@local"
 
 $RepoRoot = $PSScriptRoot | Split-Path -Parent
 $TargetDir = Join-Path $env:USERPROFILE ".cursor\plugins\$PluginName"
@@ -11,15 +10,35 @@ $CursorCommandsDir = Join-Path $env:USERPROFILE ".cursor\commands"
 $CursorSkillsDir = Join-Path $env:USERPROFILE ".cursor\skills"
 $CursorRulesDir = Join-Path $env:USERPROFILE ".cursor\rules"
 $CursorHooksPath = Join-Path $env:USERPROFILE ".cursor\hooks.json"
-$ClaudePluginsDir = Join-Path $env:USERPROFILE ".claude\plugins"
-$InstalledPluginsPath = Join-Path $ClaudePluginsDir "installed_plugins.json"
-$SettingsPath = Join-Path $env:USERPROFILE ".claude\settings.json"
+$LegacyCursorPluginDir = Join-Path $env:USERPROFILE ".cursor\plugins\whytcardAI-plugin"
 
-$DirsToCopy = @(".cursor-plugin", ".claude-plugin", "commands", "rules", "skills", "hooks", "scripts", "AGENTS.md", "CLAUDE.md", "INSTALL.md", "README.md", "LICENSE")
+$DirsToCopy = @(".cursor-plugin", "commands", "rules", "skills", "hooks", "scripts", "AGENTS.md", "INSTALL.md", "README.md", "LICENSE")
 
 Write-Host "WhytCard Intelligence - Installation" -ForegroundColor Cyan
 Write-Host "Source: $RepoRoot" -ForegroundColor Gray
 Write-Host "Target: $TargetDir" -ForegroundColor Gray
+Write-Host ""
+
+Write-Host "[0/3] Cleaning legacy conflicting installs..." -ForegroundColor Yellow
+
+if (Test-Path $LegacyCursorPluginDir) {
+  Remove-Item -Recurse -Force $LegacyCursorPluginDir
+  Write-Host "  - Removed legacy plugin folder: $LegacyCursorPluginDir" -ForegroundColor Green
+}
+
+# Legacy wc-* rules from previous plugin generations can conflict with wi-* rules.
+if (Test-Path $CursorRulesDir) {
+  Get-ChildItem -Path $CursorRulesDir -Filter "wc-*.mdc" -File -ErrorAction SilentlyContinue | ForEach-Object {
+    Remove-Item -Force $_.FullName
+    Write-Host "  - Removed legacy rule: $($_.Name)" -ForegroundColor Green
+  }
+  $legacyGlobalRule = Join-Path $CursorRulesDir "plugins-orchestrator-global.mdc"
+  if (Test-Path $legacyGlobalRule) {
+    Remove-Item -Force $legacyGlobalRule
+    Write-Host "  - Removed legacy global orchestrator rule: plugins-orchestrator-global.mdc" -ForegroundColor Green
+  }
+}
+
 Write-Host ""
 
 Write-Host "[1/3] Copying plugin files..." -ForegroundColor Yellow
@@ -79,15 +98,7 @@ if (Test-Path $RulesSrcDir) {
 }
 
 Write-Host ""
-Write-Host "[2/3] Registering in installed_plugins.json..." -ForegroundColor Yellow
-New-Item -ItemType Directory -Path $ClaudePluginsDir -Force | Out-Null
-$mergeScript = Join-Path (Join-Path $RepoRoot "scripts") "install-json-merge.js"
-node $mergeScript $InstalledPluginsPath $SettingsPath $PluginId $TargetDir
-if ($LASTEXITCODE -ne 0) { throw "JSON merge failed" }
-Write-Host "  OK: $PluginId registered and enabled" -ForegroundColor Green
-
-Write-Host ""
-Write-Host "[2b/3] Installing global Cursor hooks..." -ForegroundColor Yellow
+Write-Host "[2/2] Installing global Cursor hooks..." -ForegroundColor Yellow
 $cursorHooksMerge = Join-Path (Join-Path $RepoRoot "scripts") "install-cursor-hooks-merge.js"
 node $cursorHooksMerge $CursorHooksPath $PluginName $TargetDir
 if ($LASTEXITCODE -ne 0) { throw "Cursor hooks merge failed" }
@@ -100,6 +111,4 @@ Write-Host "Next steps:" -ForegroundColor White
 Write-Host "  1. Restart Cursor (or Reload Window: Ctrl+Shift+P)" -ForegroundColor Gray
 Write-Host "  2. Commands /wi-brainstorm, /wi-add-feature should appear" -ForegroundColor Gray
 Write-Host "     (Global hooks are installed via ~/.cursor/hooks.json)" -ForegroundColor Gray
-Write-Host ""
-Write-Host "Claude Code: plugin shared via .claude" -ForegroundColor Gray
 Write-Host ""

@@ -4,7 +4,7 @@
  *
  * Injects the orchestrator identity, detected stack, and project config
  * into every conversation. Handles .whytcard onboarding if needed.
- * Works on both Claude Code and Cursor via shared output module.
+ * Works in Cursor via shared output module.
  */
 
 const fs = require("fs");
@@ -21,13 +21,27 @@ const {
 // ─── Load orchestrator identity ─────────────────────────────────────────
 
 const pluginRoot = getPluginRoot();
-const identityPath = path.join(pluginRoot, "CLAUDE.md");
 let identity = "";
-try {
-  identity = fs.readFileSync(identityPath, "utf8").trim();
-} catch (err) {
-  identity = "ERROR: Could not load CLAUDE.md — " + err.message;
-  process.stderr.write(`wi-session-start: failed to load CLAUDE.md — ${err.message}\n`);
+const identityCandidates = ["AGENTS.md", "README.md"];
+for (const filename of identityCandidates) {
+  const candidate = path.join(pluginRoot, filename);
+  if (!fs.existsSync(candidate)) continue;
+  try {
+    identity = fs.readFileSync(candidate, "utf8").trim();
+    break;
+  } catch (err) {
+    process.stderr.write(
+      `wi-session-start: failed to load ${filename} — ${err.message}\n`,
+    );
+  }
+}
+if (!identity) {
+  identity =
+    "WhytCard orchestrator identity unavailable (missing AGENTS.md/README.md).";
+}
+const MAX_IDENTITY_CHARS = 3500;
+if (identity.length > MAX_IDENTITY_CHARS) {
+  identity = `${identity.slice(0, MAX_IDENTITY_CHARS)}\n\n[truncated: see AGENTS.md for full details]`;
 }
 
 // ─── Detect project stack ───────────────────────────────────────────────
@@ -46,15 +60,21 @@ function detectStack(cwd) {
       if (allDeps["vue"]) signals.push("vue");
       if (allDeps["svelte"] || allDeps["@sveltejs/kit"]) signals.push("svelte");
       if (allDeps["tailwindcss"]) signals.push("tailwind");
-      if (allDeps["@supabase/supabase-js"] || allDeps["@supabase/ssr"]) signals.push("supabase");
+      if (allDeps["@supabase/supabase-js"] || allDeps["@supabase/ssr"])
+        signals.push("supabase");
       if (allDeps["stripe"]) signals.push("stripe");
-      if (allDeps["next-intl"] || allDeps["i18next"] || allDeps["vue-i18n"]) signals.push("i18n");
-      if (allDeps["@radix-ui/react-dialog"] || allDeps["@radix-ui/themes"]) signals.push("radix");
+      if (allDeps["next-intl"] || allDeps["i18next"] || allDeps["vue-i18n"])
+        signals.push("i18n");
+      if (allDeps["@radix-ui/react-dialog"] || allDeps["@radix-ui/themes"])
+        signals.push("radix");
       if (allDeps["motion"] || allDeps["framer-motion"]) signals.push("motion");
-      if (allDeps["playwright"] || allDeps["@playwright/test"]) signals.push("playwright");
+      if (allDeps["playwright"] || allDeps["@playwright/test"])
+        signals.push("playwright");
       if (allDeps["astro"]) signals.push("astro");
     } catch (err) {
-      process.stderr.write(`wi-session-start: failed to parse package.json — ${err.message}\n`);
+      process.stderr.write(
+        `wi-session-start: failed to parse package.json — ${err.message}\n`,
+      );
     }
   }
 
@@ -68,14 +88,19 @@ function detectStack(cwd) {
         if (content.includes("django")) signals.push("django");
         if (content.includes("flask")) signals.push("flask");
         if (content.includes("groq")) signals.push("groq");
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
   }
 
   // Other languages
   if (fs.existsSync(path.join(cwd, "Cargo.toml"))) signals.push("rust");
   if (fs.existsSync(path.join(cwd, "go.mod"))) signals.push("go");
-  if (fs.existsSync(path.join(cwd, "Dockerfile")) || fs.existsSync(path.join(cwd, "docker-compose.yml"))) {
+  if (
+    fs.existsSync(path.join(cwd, "Dockerfile")) ||
+    fs.existsSync(path.join(cwd, "docker-compose.yml"))
+  ) {
     signals.push("docker");
   }
 
@@ -83,7 +108,11 @@ function detectStack(cwd) {
   try {
     const entries = fs.readdirSync(cwd, { withFileTypes: true });
     for (const entry of entries) {
-      if (entry.isDirectory() && !entry.name.startsWith(".") && entry.name !== "node_modules") {
+      if (
+        entry.isDirectory() &&
+        !entry.name.startsWith(".") &&
+        entry.name !== "node_modules"
+      ) {
         const subPkg = path.join(cwd, entry.name, "package.json");
         if (fs.existsSync(subPkg)) {
           try {
@@ -92,11 +121,15 @@ function detectStack(cwd) {
             if (allDeps["next"]) signals.push("nextjs");
             if (allDeps["react"]) signals.push("react");
             if (allDeps["vue"]) signals.push("vue");
-          } catch { /* ignore */ }
+          } catch {
+            /* ignore */
+          }
         }
       }
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
   return [...new Set(signals)];
 }
@@ -159,13 +192,16 @@ const cwd = process.cwd();
 const stack = detectStack(cwd);
 const config = loadConfig(cwd);
 
-const stackLine = stack.length > 0
-  ? `\nDetected stack: ${stack.join(", ")}. Adapt your agents and pipeline to these technologies.`
-  : "";
+const stackLine =
+  stack.length > 0
+    ? `\nDetected stack: ${stack.join(", ")}. Adapt your agents and pipeline to these technologies.`
+    : "";
 
 const configLine = `\nProject config: viewports=${JSON.stringify(config.viewports)}, visualVerification=${config.visualVerification}, darkModeCheck=${config.darkModeCheck}`;
-const proactiveLine = "\nRuntime rule: Gather missing context proactively when it materially improves correctness or execution. If material uncertainty remains, keep reading, researching, or delegating; never stop at the first plausible answer.";
-const delegationLine = "\nRuntime rule: Use subagents proactively for broad reading, deep research, review, diagnosis, and implementation when that reduces uncertainty or context load.";
+const proactiveLine =
+  "\nRuntime rule: Gather missing context proactively when it materially improves correctness or execution. If material uncertainty remains, keep reading, researching, or delegating; never stop at the first plausible answer.";
+const delegationLine =
+  "\nRuntime rule: Use subagents proactively for broad reading, deep research, review, diagnosis, and implementation when that reduces uncertainty or context load.";
 
 const onboarding = buildOnboardingContext(cwd);
 

@@ -2,7 +2,6 @@
 set -euo pipefail
 
 PLUGIN_NAME="whytcard-intelligence"
-PLUGIN_ID="${PLUGIN_NAME}@local"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -11,21 +10,16 @@ CURSOR_COMMANDS_DIR="${HOME}/.cursor/commands"
 CURSOR_SKILLS_DIR="${HOME}/.cursor/skills"
 CURSOR_RULES_DIR="${HOME}/.cursor/rules"
 CURSOR_HOOKS_PATH="${HOME}/.cursor/hooks.json"
-
-CLAUDE_PLUGINS_DIR="${HOME}/.claude/plugins"
-INSTALLED_PLUGINS_PATH="${CLAUDE_PLUGINS_DIR}/installed_plugins.json"
-SETTINGS_PATH="${HOME}/.claude/settings.json"
+LEGACY_CURSOR_PLUGIN_DIR="${HOME}/.cursor/plugins/whytcardAI-plugin"
 
 DIRS_TO_COPY=(
   ".cursor-plugin"
-  ".claude-plugin"
   "commands"
   "rules"
   "skills"
   "hooks"
   "scripts"
   "AGENTS.md"
-  "CLAUDE.md"
   "INSTALL.md"
   "README.md"
   "LICENSE"
@@ -36,6 +30,25 @@ say() { printf "%s\n" "$*"; }
 say "WhytCard Intelligence - Installation"
 say "Source: ${REPO_ROOT}"
 say "Target: ${TARGET_DIR}"
+say ""
+
+say "[0/3] Cleaning legacy conflicting installs..."
+if [[ -d "${LEGACY_CURSOR_PLUGIN_DIR}" ]]; then
+  rm -rf "${LEGACY_CURSOR_PLUGIN_DIR}"
+  say "  - Removed legacy plugin folder: ${LEGACY_CURSOR_PLUGIN_DIR}"
+fi
+if [[ -d "${CURSOR_RULES_DIR}" ]]; then
+  shopt -s nullglob
+  for legacy_rule in "${CURSOR_RULES_DIR}"/wc-*.mdc; do
+    rm -f "${legacy_rule}"
+    say "  - Removed legacy rule: $(basename "${legacy_rule}")"
+  done
+  shopt -u nullglob
+  if [[ -f "${CURSOR_RULES_DIR}/plugins-orchestrator-global.mdc" ]]; then
+    rm -f "${CURSOR_RULES_DIR}/plugins-orchestrator-global.mdc"
+    say "  - Removed legacy global orchestrator rule: plugins-orchestrator-global.mdc"
+  fi
+fi
 say ""
 
 say "[1/3] Copying plugin files..."
@@ -87,13 +100,7 @@ fi
 shopt -u nullglob
 
 say ""
-say "[2/3] Registering in installed_plugins.json..."
-mkdir -p "${CLAUDE_PLUGINS_DIR}"
-node "${REPO_ROOT}/scripts/install-json-merge.js" "${INSTALLED_PLUGINS_PATH}" "${SETTINGS_PATH}" "${PLUGIN_ID}" "${TARGET_DIR}"
-say "  OK: ${PLUGIN_ID} registered and enabled"
-
-say ""
-say "[2b/3] Installing global Cursor hooks..."
+say "[2/2] Installing global Cursor hooks..."
 node "${REPO_ROOT}/scripts/install-cursor-hooks-merge.js" "${CURSOR_HOOKS_PATH}" "${PLUGIN_NAME}" "${TARGET_DIR}"
 say "  OK: Cursor hooks merged into ${CURSOR_HOOKS_PATH}"
 

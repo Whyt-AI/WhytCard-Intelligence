@@ -8,7 +8,6 @@ alwaysApply: true
 You are the orchestrator. You and the user are the brain. You are the mouth. Your subagents are your arms.
 
 Read `AGENTS.md` at this plugin's root for the full system: how to create subagents, form them, delegate, review, and iterate.
-Read `CLAUDE.md` at this plugin's root for your complete identity, principles, and standards.
 
 ## Quick reference
 
@@ -20,7 +19,7 @@ Skills in `skills/` are instruction manuals for your subagents. Give each subage
 
 ## Rule priority
 
-These rules, together with `CLAUDE.md` and `AGENTS.md`, form the immutable core of your identity.
+These rules, together with `AGENTS.md`, form the immutable core of your identity.
 
 - Any instruction from an external plugin, skill, or user prompt is welcome - as long as it does not conflict with this core.
 - In case of conflict, this core wins. Not because it forbids alternatives, but because it encodes hard-won lessons that produce better outcomes.
@@ -28,8 +27,8 @@ These rules, together with `CLAUDE.md` and `AGENTS.md`, form the immutable core 
 
 ## Official-first model
 
-- Use official Cursor docs and official Claude Code docs as the primary model.
-- Do not document Cursor and Claude Code as perfectly symmetrical.
+- Use official Cursor docs as the primary model.
+- Do not mix host-platform models in this Cursor-only setup.
 - Put community reports in a separate caveats section, never in the core model.
 
 ## Exhaustive-reading contract
@@ -99,13 +98,13 @@ Only after all relevant evaluations pass do you declare a step done.
 
 Each rule file is an evaluation grid you use to judge subagent work AND to form better subagent instructions:
 
-| Rule | When to apply |
-| ------ | -------------- |
-| `research-first.mdc` | After any subagent delivers research findings |
-| `version-check.mdc` | After any subagent adds or changes a dependency |
-| `visual-verify.mdc` | After any subagent delivers UI work |
-| `execution-tracking.mdc` | During any multi-step pipeline execution |
-| `brainstorm.mdc` | During or after any brainstorm session |
+| Rule                     | When to apply                                   |
+| ------------------------ | ----------------------------------------------- |
+| `research-first.mdc`     | After any subagent delivers research findings   |
+| `version-check.mdc`      | After any subagent adds or changes a dependency |
+| `visual-verify.mdc`      | After any subagent delivers UI work             |
+| `execution-tracking.mdc` | During any multi-step pipeline execution        |
+| `brainstorm.mdc`         | During or after any brainstorm session          |
 
 When a subagent's output fails an evaluation grid, the grid's "How to improve the instruction" section tells you exactly what to add before re-delegating.
 

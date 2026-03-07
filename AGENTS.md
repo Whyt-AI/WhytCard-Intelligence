@@ -4,10 +4,9 @@ You are the orchestrator. Your subagents are your arms. This document defines ho
 
 ## Official-first model
 
-Use official Cursor and Claude Code documentation as the primary model.
+Use official Cursor documentation as the primary model.
 
-- Cursor and Claude Code both support subagents, hooks, and command-like workflows.
-- They are not perfectly symmetrical products.
+- Cursor supports subagents, hooks, and command-like workflows.
 - Community reports are useful only as clearly labeled caveats.
 
 ## Read exhaustively before claiming understanding
@@ -59,7 +58,6 @@ Do not create a subagent when:
 Use the host-appropriate location:
 
 - Cursor example: `.cursor/agents/`
-- Claude Code example: `.claude/agents/`
 
 This repo uses Cursor-style examples by default, but the concept is the same: a markdown file with YAML frontmatter, a strong description, and explicit tool scope.
 
@@ -86,15 +84,19 @@ tools:
 You are [role]. Your mission is [one sentence].
 
 ## Context
+
 [Why this micro-action matters]
 
 ## Task
+
 [The exact action]
 
 ## Scope
+
 [Exact files or globs allowed]
 
 ## Quality bar
+
 - 0 errors
 - 0 warnings
 - No dead code
@@ -102,17 +104,18 @@ You are [role]. Your mission is [one sentence].
 - Evidence written to the declared path
 
 ## Done when
+
 [Observable checklist]
 ```
 
 ### Key fields
 
-| Field | Purpose |
-| --- | --- |
-| `name` | Lowercase, kebab-case identifier. |
+| Field         | Purpose                                             |
+| ------------- | --------------------------------------------------- |
+| `name`        | Lowercase, kebab-case identifier.                   |
 | `description` | Routing signal. State trigger terms and boundaries. |
-| `readonly` | `true` for research/review only. |
-| `tools` | Grant only what is required. |
+| `readonly`    | `true` for research/review only.                    |
+| `tools`       | Grant only what is required.                        |
 
 ## How to form a good instruction
 
@@ -130,12 +133,12 @@ Do not send context-free one-liners when the subagent needs project judgment.
 
 ## Tool profiles
 
-| Type | readonly | Typical tools |
-| --- | --- | --- |
-| Research | true | Read, Glob, Grep, WebSearch |
-| Review | true | Read, Glob, Grep, Bash |
-| Implementation | false | Read, Glob, Grep, Edit, Write, Bash, WebSearch |
-| Visual verification | true | Read, Bash |
+| Type                | readonly | Typical tools                                  |
+| ------------------- | -------- | ---------------------------------------------- |
+| Research            | true     | Read, Glob, Grep, WebSearch                    |
+| Review              | true     | Read, Glob, Grep, Bash                         |
+| Implementation      | false    | Read, Glob, Grep, Edit, Write, Bash, WebSearch |
+| Visual verification | true     | Read, Bash                                     |
 
 ## Canonical `.whytcard` contract
 
@@ -227,13 +230,14 @@ These wrappers are plugin conventions, not host-platform modes:
 - `autopilot-safe`
 - `autopilot-full`
 
-Use them in docs and command wrappers, but do not confuse them with Cursor's official Ask/Agent/Plan/Debug modes or Claude Code's official CLI/settings model.
+Use them in docs and command wrappers, but do not confuse them with Cursor's official Ask/Agent/Plan/Debug modes.
 
 ## Context economy
 
 Every agent runs in an isolated context. When it finishes, its context is discarded. Only the results come back to you.
 
 This means:
+
 - Your context stays clean — you keep the big picture
 - Agents can go deep into code without polluting your view
 - You can run 10 steps and still remember the original objective
@@ -241,22 +245,27 @@ This means:
 
 ## Cursor Cloud specific instructions
 
-This is a **Cursor/Claude plugin** (not a web app). There is no build step, no npm dependencies, no test framework, and no linter configured. All JavaScript uses only Node.js built-in modules (`fs`, `path`, `os`, `crypto`).
+This is a **Cursor plugin** (not a web app). There is no build step, no npm dependencies, no test framework, and no linter configured. All JavaScript uses only Node.js built-in modules (`fs`, `path`, `os`, `crypto`).
 
 ### What the plugin contains
-- **Hook scripts** (`hooks/`): 4 JS scripts executed by Cursor/Claude at session-start, pre-edit, post-edit, and prompt-dispatch events.
-- **Install scripts** (`scripts/`): `install-plugin.sh` (Linux/macOS) and `install-plugin.ps1` (Windows) copy plugin files to `~/.cursor/` and `~/.claude/`.
+
+- **Hook scripts** (`hooks/`): 4 JS scripts executed by Cursor at session-start, pre-edit, post-edit, and prompt-dispatch events.
+- **Install scripts** (`scripts/`): `install-plugin.sh` (Linux/macOS) and `install-plugin.ps1` (Windows) copy plugin files to `~/.cursor/`.
 - **Commands, skills, rules**: Markdown/MDC files that register as `/wi-*` commands in Cursor.
 
 ### How to install/refresh
+
 Run `bash scripts/install-plugin.sh` (Linux/macOS) or `.\scripts\install-plugin.ps1` (Windows) from the repo root. Both scripts are idempotent and safe to re-run.
 
 ### How to test
+
 There is no test suite. Verify the plugin works by running the hook scripts directly with piped JSON input:
+
 - `node hooks/wi-session-start.js` (outputs orchestrator context JSON)
 - `echo '{"prompt":"brainstorm"}' | node hooks/wi-prompt-dispatch.js` (outputs dispatch hints)
 - `echo '{"tool_name":"Edit","tool_input":{"file_path":"src/app.tsx"}}' | node hooks/wi-pre-edit-gate.js`
 - `echo '{"tool_input":{"file_path":"src/app.tsx"}}' | node hooks/wi-post-edit-verify.js`
 
 ### Gotcha: session-start hook requires cwd
-The `wi-session-start.js` hook reads `CLAUDE.md` relative to the plugin root (resolved via `$CLAUDE_PLUGIN_ROOT`, `$CURSOR_PLUGIN_ROOT`, or `__dirname`). When testing from the repo root, it works because `__dirname` resolves correctly. When testing from the installed path (`~/.cursor/plugins/whytcard-intelligence/`), the working directory must be set explicitly.
+
+The `wi-session-start.js` hook reads orchestrator identity from `AGENTS.md` (fallback `README.md`) relative to the plugin root. When testing from the repo root, it works because `__dirname` resolves correctly. When testing from the installed path (`~/.cursor/plugins/whytcard-intelligence/`), run the command from any directory; the hook resolves its own path.

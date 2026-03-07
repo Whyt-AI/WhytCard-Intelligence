@@ -19,7 +19,7 @@ const path = require("node:path");
 const [cursorHooksPath, pluginName, pluginInstallPath] = process.argv.slice(2);
 if (!cursorHooksPath || !pluginName || !pluginInstallPath) {
   process.stderr.write(
-    "Usage: node install-cursor-hooks-merge.js <cursorHooksPath> <pluginName> <pluginInstallPath>\n"
+    "Usage: node install-cursor-hooks-merge.js <cursorHooksPath> <pluginName> <pluginInstallPath>\n",
   );
   process.exit(1);
 }
@@ -49,14 +49,19 @@ function parseNodeTarget(command) {
   const s = String(command || "").trim();
   if (!s.toLowerCase().startsWith("node ")) return null;
   let t = s.slice(5).trim();
-  if ((t.startsWith("\"") && t.endsWith("\"")) || (t.startsWith("'") && t.endsWith("'"))) {
+  if (
+    (t.startsWith('"') && t.endsWith('"')) ||
+    (t.startsWith("'") && t.endsWith("'"))
+  ) {
     t = t.slice(1, -1);
   }
   return t.trim() || null;
 }
 
 function canonicalizeCommand(cmd) {
-  return String(cmd || "").trim().replace(/\s+/g, " ");
+  return String(cmd || "")
+    .trim()
+    .replace(/\s+/g, " ");
 }
 
 function uniqueByCommand(entries) {
@@ -101,8 +106,24 @@ function pruneBrokenCommandEntries(entries) {
   return out;
 }
 
+function isLegacyConflictEntry(entry) {
+  if (!entry || typeof entry !== "object") return false;
+  const src = String(entry._source || "").toLowerCase();
+  if (src === "whytcardai-plugin" || src === "whytcard-ai-plugin") return true;
+
+  const cmd = String(entry.command || "").toLowerCase();
+  return (
+    cmd.includes("\\plugins\\whytcardai-plugin\\") ||
+    cmd.includes("/plugins/whytcardai-plugin/")
+  );
+}
+
 function loadStopPromptFromPlugin() {
-  const hooksJsonPath = path.join(pluginInstallPath, "hooks", "hooks.cursor.json");
+  const hooksJsonPath = path.join(
+    pluginInstallPath,
+    "hooks",
+    "hooks.cursor.json",
+  );
   const doc = readJsonOrDefault(hooksJsonPath, null);
   if (!doc || !doc.hooks || !doc.hooks.Stop) return null;
   const first = doc.hooks.Stop[0];
@@ -113,7 +134,11 @@ function loadStopPromptFromPlugin() {
 
 const hookScripts = {
   sessionStart: path.join(pluginInstallPath, "hooks", "wi-session-start.js"),
-  beforeSubmitPrompt: path.join(pluginInstallPath, "hooks", "wi-prompt-dispatch.js"),
+  beforeSubmitPrompt: path.join(
+    pluginInstallPath,
+    "hooks",
+    "wi-prompt-dispatch.js",
+  ),
   preToolUse: path.join(pluginInstallPath, "hooks", "wi-pre-edit-gate.js"),
   postToolUse: path.join(pluginInstallPath, "hooks", "wi-post-edit-verify.js"),
 };
@@ -175,7 +200,9 @@ const next = {
 
 // Merge + prune per hook.
 for (const [hookName, addEntries] of Object.entries(desired)) {
-  const existing = Array.isArray(next.hooks[hookName]) ? next.hooks[hookName] : [];
+  const existing = Array.isArray(next.hooks[hookName])
+    ? next.hooks[hookName]
+    : [];
   const merged = [...existing, ...addEntries];
   const pruned = pruneBrokenCommandEntries(merged);
   next.hooks[hookName] = uniqueByCommand(pruned);
@@ -184,7 +211,11 @@ for (const [hookName, addEntries] of Object.entries(desired)) {
 // Also prune broken command entries in *all* hooks (keeps config clean).
 for (const [hookName, entries] of Object.entries(next.hooks)) {
   if (!Array.isArray(entries)) continue;
-  next.hooks[hookName] = uniqueByCommand(pruneBrokenCommandEntries(entries));
+  next.hooks[hookName] = uniqueByCommand(
+    pruneBrokenCommandEntries(entries).filter(
+      (entry) => !isLegacyConflictEntry(entry),
+    ),
+  );
 }
 
 // Backup if changing.
@@ -205,4 +236,3 @@ if (prevText !== nextText && prevText) {
 
 writeJson(cursorHooksPath, next);
 process.stdout.write("OK\n");
-
