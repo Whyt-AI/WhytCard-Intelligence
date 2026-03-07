@@ -94,19 +94,20 @@ handleStdin((data) => {
   if (isApplicationCode(filePath)) {
     return denyAction(
       "PreToolUse",
-      `WC-DENY: Direct edit blocked for application code (${filePath}). As the orchestrator, delegate code changes to a subagent. Direct edits are reserved for orchestration/plugin files such as hooks/, rules/, commands/, skills/, scripts/, plugin manifests, .whytcard/, markdown, and .mdc.`
+      `WC-DENY: Direct edit blocked for application code (${filePath}). As the orchestrator, delegate code changes to a subagent. Direct edits are reserved for orchestration/plugin files such as hooks/, rules/, commands/, skills/, scripts/, plugin manifests, .whytcard/, markdown, and .mdc.`,
     );
   }
 
   if (config.visualVerification && isVisualFile(filePathLower)) {
     const vp = config.viewports || [375, 768, 1440];
     reminders.push(
-      `WC-VISUAL: Visual file detected. After editing, evaluate with rules/visual-verify.mdc: screenshots at ${vp.length} viewports (${vp.join("/")}px), dark+light modes.`
+      `WC-VISUAL: Visual file detected. After editing, evaluate with rules/visual-verify.mdc: screenshots at ${vp.length} viewports (${vp.join("/")}px), dark+light modes.`,
     );
   }
 
   if (config.versionCheck && filePathLower.endsWith("package.json")) {
-    const editContent = toolInput.new_string || toolInput.content || toolInput.insert || "";
+    const editContent =
+      toolInput.new_string || toolInput.content || toolInput.insert || "";
     const isDependencyEdit =
       editContent.includes("dependencies") ||
       editContent.includes("devDependencies") ||
@@ -116,20 +117,24 @@ handleStdin((data) => {
       editContent === "";
     if (isDependencyEdit) {
       reminders.push(
-        "WC-VERSIONS: Dependency change detected. Evaluate with rules/version-check.mdc: verify latest version via live search, check maintenance, compare alternatives."
+        "WC-VERSIONS: Dependency change detected. Evaluate with rules/version-check.mdc: verify latest version via live search, check maintenance, compare alternatives.",
       );
     }
   }
 
-  if (config.researchFirst && toolName === "Write" && !isOrchestrationFile(filePathLower)) {
+  if (
+    config.researchFirst &&
+    toolName === "Write" &&
+    !isOrchestrationFile(filePathLower)
+  ) {
     reminders.push(
-      "WC-RESEARCH: New file creation. Evaluate with rules/research-first.mdc: was the approach researched? dual-angle? alternatives considered?"
+      "WC-RESEARCH: New file creation. Evaluate with rules/research-first.mdc: was the approach researched? dual-angle? alternatives considered?",
     );
   }
 
   if (isOrchestrationFile(filePathLower)) {
     reminders.push(
-      "WC-QUALITY: Allowed direct edit. Keep the orchestrator contract intact: preserve delegation rules, keep instructions executable, and require concrete evidence paths and gate commands."
+      "WC-QUALITY: Allowed direct edit. Keep the orchestrator contract intact: preserve delegation rules, keep instructions executable, and require concrete evidence paths and gate commands.",
     );
   }
 

@@ -6,9 +6,12 @@
 const fs = require("fs");
 const path = require("path");
 
-const [installedPath, settingsPath, pluginId, installPath] = process.argv.slice(2);
+const [installedPath, settingsPath, pluginId, installPath] =
+  process.argv.slice(2);
 if (!installedPath || !settingsPath || !pluginId || !installPath) {
-  console.error("Usage: node install-json-merge.js <installed_plugins.json> <settings.json> <pluginId> <installPath>");
+  console.error(
+    "Usage: node install-json-merge.js <installed_plugins.json> <settings.json> <pluginId> <installPath>",
+  );
   process.exit(1);
 }
 
@@ -37,7 +40,10 @@ function parseNodeTarget(command) {
   const s = String(command || "").trim();
   if (!s.toLowerCase().startsWith("node ")) return null;
   let t = s.slice(5).trim();
-  if ((t.startsWith("\"") && t.endsWith("\"")) || (t.startsWith("'") && t.endsWith("'"))) {
+  if (
+    (t.startsWith('"') && t.endsWith('"')) ||
+    (t.startsWith("'") && t.endsWith("'"))
+  ) {
     t = t.slice(1, -1);
   }
   return t.trim() || null;
@@ -53,7 +59,8 @@ function pathExists(p) {
 }
 
 function pruneBrokenHooks(hooksRoot) {
-  if (!hooksRoot || typeof hooksRoot !== "object") return { hooks: hooksRoot, removed: 0 };
+  if (!hooksRoot || typeof hooksRoot !== "object")
+    return { hooks: hooksRoot, removed: 0 };
   let removed = 0;
   const next = {};
 
@@ -65,7 +72,10 @@ function pruneBrokenHooks(hooksRoot) {
 
     const keptMatchers = [];
     for (const matcherBlock of matchers) {
-      const block = matcherBlock && typeof matcherBlock === "object" ? { ...matcherBlock } : matcherBlock;
+      const block =
+        matcherBlock && typeof matcherBlock === "object"
+          ? { ...matcherBlock }
+          : matcherBlock;
       if (!block || typeof block !== "object" || !Array.isArray(block.hooks)) {
         keptMatchers.push(block);
         continue;
@@ -112,7 +122,11 @@ const pruned = pruneBrokenHooks(beforeHooks);
 if (pruned.removed > 0) {
   try {
     const ts = new Date().toISOString().replace(/[:.]/g, "-");
-    fs.writeFileSync(`${settingsPath}.bak-${ts}`, JSON.stringify(settings, null, 2), "utf8");
+    fs.writeFileSync(
+      `${settingsPath}.bak-${ts}`,
+      JSON.stringify(settings, null, 2),
+      "utf8",
+    );
   } catch {}
   settings.hooks = pruned.hooks;
 }

@@ -21,7 +21,8 @@ const path = require("path");
  * Returns "cursor" | "unknown"
  */
 function detectPlatform() {
-  if (process.env.CURSOR_PLUGIN_ROOT || process.env.__CURSOR_HOOKS__) return "cursor";
+  if (process.env.CURSOR_PLUGIN_ROOT || process.env.__CURSOR_HOOKS__)
+    return "cursor";
   // Heuristic: check if we're inside a .cursor directory structure
   const cwd = process.cwd();
   if (fs.existsSync(path.join(cwd, ".cursor"))) return "cursor";
@@ -100,11 +101,18 @@ function allowAction(eventName, reason) {
  * File extensions that affect visual output and require screenshot verification.
  */
 const VISUAL_EXTENSIONS = [
-  ".tsx", ".jsx",                          // React components
-  ".vue", ".svelte", ".astro",             // Other UI frameworks
-  ".css", ".scss", ".sass", ".less",       // Stylesheets
-  ".module.css", ".module.scss",           // CSS modules
-  ".html",                                 // HTML templates
+  ".tsx",
+  ".jsx", // React components
+  ".vue",
+  ".svelte",
+  ".astro", // Other UI frameworks
+  ".css",
+  ".scss",
+  ".sass",
+  ".less", // Stylesheets
+  ".module.css",
+  ".module.scss", // CSS modules
+  ".html", // HTML templates
 ];
 
 /**
@@ -133,7 +141,9 @@ function loadConfig(cwd) {
     const userConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
     return { ...defaults, ...userConfig };
   } catch (err) {
-    process.stderr.write(`wi-config: failed to parse wi-config.json — ${err.message}\n`);
+    process.stderr.write(
+      `wi-config: failed to parse wi-config.json — ${err.message}\n`,
+    );
     return defaults;
   }
 }
@@ -143,10 +153,7 @@ function loadConfig(cwd) {
  * Falls back to deriving from __dirname of the calling script.
  */
 function getPluginRoot() {
-  return (
-    process.env.CURSOR_PLUGIN_ROOT ||
-    path.join(__dirname, "..", "..")
-  );
+  return process.env.CURSOR_PLUGIN_ROOT || path.join(__dirname, "..", "..");
 }
 
 /**
