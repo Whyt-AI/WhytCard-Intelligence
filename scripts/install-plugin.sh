@@ -100,7 +100,7 @@ fi
 shopt -u nullglob
 
 say ""
-say "[2/2] Installing global Cursor hooks..."
+say "[2/3] Installing global Cursor hooks..."
 node "${REPO_ROOT}/scripts/install-cursor-hooks-merge.js" "${CURSOR_HOOKS_PATH}" "${PLUGIN_NAME}" "${TARGET_DIR}"
 say "  OK: Cursor hooks merged into ${CURSOR_HOOKS_PATH}"
 

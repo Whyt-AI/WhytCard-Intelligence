@@ -1,5 +1,5 @@
 ---
-description: "Interactive brainstorm with research. Uses wi-brainstorm."
+description: "Interactive brainstorm with research. Uses sk-wi-brainstorm."
 disable-model-invocation: true
 ---
 
@@ -9,7 +9,7 @@ Mode: `interactive`
 
 Use when the user wants to explore options before committing to implementation.
 
-Invoke `wi-brainstorm` and follow it exactly.
+Invoke `sk-wi-brainstorm` and follow it exactly.
 
 Return:
 

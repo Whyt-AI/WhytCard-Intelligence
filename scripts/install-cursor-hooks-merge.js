@@ -64,158 +64,206 @@ function canonicalizeCommand(cmd) {
     .replace(/\s+/g, " ");
 }
 
-function uniqueByCommand(entries) {
+function clone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+function hookKey(hook) {
+  if (!hook || typeof hook !== "object") return "invalid";
+  const type = String(hook.type || "");
+  if (type === "command") return `command:${canonicalizeCommand(hook.command)}`;
+  if (type === "prompt") return `prompt:${String(hook.prompt || "").trim()}`;
+  return `other:${JSON.stringify(hook)}`;
+}
+
+function uniqueHooks(hooks) {
   const out = [];
   const seen = new Set();
-  for (const e of entries || []) {
-    const entry = e && typeof e === "object" ? e : null;
-    const cmdKey = canonicalizeCommand(entry && entry.command);
-    const promptKey =
-      entry && entry.type === "prompt" && typeof entry.prompt === "string"
-        ? `prompt:${entry.prompt.trim()}`
-        : "";
-    const key = cmdKey || promptKey;
-    if (!key) continue;
+  for (const hook of hooks || []) {
+    const key = hookKey(hook);
     if (seen.has(key)) continue;
     seen.add(key);
-    out.push(e);
+    out.push(hook);
   }
   return out;
 }
 
-function pruneBrokenCommandEntries(entries) {
-  const out = [];
-  for (const e of entries || []) {
-    if (!e || typeof e !== "object") continue;
-    if (!e.command) {
-      out.push(e);
-      continue;
-    }
-    const target = parseNodeTarget(e.command);
-    if (!target) {
-      out.push(e);
-      continue;
-    }
-    const normalized = target.replace(/\//g, path.sep);
-    if (pathExists(target) || pathExists(normalized)) {
-      out.push(e);
-      continue;
-    }
-    // Drop broken command hook.
-  }
-  return out;
-}
-
-function isLegacyConflictEntry(entry) {
-  if (!entry || typeof entry !== "object") return false;
-  const src = String(entry._source || "").toLowerCase();
+function isLegacyConflictHook(hook) {
+  if (!hook || typeof hook !== "object") return false;
+  const src = String(hook._source || "").toLowerCase();
   if (src === "whytcardai-plugin" || src === "whytcard-ai-plugin") return true;
-
-  const cmd = String(entry.command || "").toLowerCase();
+  const cmd = String(hook.command || "").toLowerCase();
   return (
     cmd.includes("\\plugins\\whytcardai-plugin\\") ||
     cmd.includes("/plugins/whytcardai-plugin/")
   );
 }
 
-function loadStopPromptFromPlugin() {
+function resolveCursorPluginRootInCommand(command) {
+  const normalizedInstallPath = pluginInstallPath.replace(/\\/g, "/");
+  return String(command || "").replace(
+    /\$CURSOR_PLUGIN_ROOT/g,
+    normalizedInstallPath,
+  );
+}
+
+function loadDesiredHooksFromTemplate() {
   const hooksJsonPath = path.join(
     pluginInstallPath,
     "hooks",
     "hooks.cursor.json",
   );
   const doc = readJsonOrDefault(hooksJsonPath, null);
-  if (!doc || !doc.hooks || !doc.hooks.Stop) return null;
-  const first = doc.hooks.Stop[0];
-  const hook = first && first.hooks && first.hooks[0];
-  const prompt = hook && hook.type === "prompt" ? hook.prompt : null;
-  return typeof prompt === "string" && prompt.trim() ? prompt : null;
-}
-
-const hookScripts = {
-  sessionStart: path.join(pluginInstallPath, "hooks", "wi-session-start.js"),
-  beforeSubmitPrompt: path.join(
-    pluginInstallPath,
-    "hooks",
-    "wi-prompt-dispatch.js",
-  ),
-  preToolUse: path.join(pluginInstallPath, "hooks", "wi-pre-edit-gate.js"),
-  postToolUse: path.join(pluginInstallPath, "hooks", "wi-post-edit-verify.js"),
-};
-
-for (const [k, p] of Object.entries(hookScripts)) {
-  if (!pathExists(p)) {
-    process.stderr.write(`ERROR: missing hook script for ${k}: ${p}\n`);
-    process.exit(2);
+  if (!doc || typeof doc !== "object" || !doc.hooks) {
+    process.stderr.write(
+      `ERROR: invalid hooks template: ${hooksJsonPath} (missing hooks object)\n`,
+    );
+    process.exit(3);
   }
+
+  const desired = {};
+  for (const [eventName, matcherBlocks] of Object.entries(doc.hooks)) {
+    if (!Array.isArray(matcherBlocks)) continue;
+    desired[eventName] = [];
+    for (const block of matcherBlocks) {
+      if (!block || typeof block !== "object" || !Array.isArray(block.hooks))
+        continue;
+      const normalizedBlock = {
+        matcher: String(block.matcher || ""),
+        hooks: [],
+      };
+      for (const hook of block.hooks) {
+        if (!hook || typeof hook !== "object") continue;
+        const nextHook = clone(hook);
+        if (nextHook.type === "command") {
+          nextHook.command = resolveCursorPluginRootInCommand(nextHook.command);
+          const target = parseNodeTarget(nextHook.command);
+          if (target) {
+            const normalized = target.replace(/\//g, path.sep);
+            if (!pathExists(target) && !pathExists(normalized)) {
+              process.stderr.write(
+                `ERROR: hook command target missing for ${eventName}: ${nextHook.command}\n`,
+              );
+              process.exit(2);
+            }
+          }
+        }
+        nextHook._source = pluginName;
+        normalizedBlock.hooks.push(nextHook);
+      }
+      normalizedBlock.hooks = uniqueHooks(normalizedBlock.hooks);
+      if (normalizedBlock.hooks.length > 0) {
+        desired[eventName].push(normalizedBlock);
+      }
+    }
+  }
+  return desired;
 }
 
-const stopPrompt = loadStopPromptFromPlugin();
+function cleanHooksInBlock(block) {
+  if (!block || typeof block !== "object" || !Array.isArray(block.hooks))
+    return null;
 
-const desired = {
-  sessionStart: [
-    {
-      command: `node "${hookScripts.sessionStart}"`,
-      _source: pluginName,
-    },
-  ],
-  beforeSubmitPrompt: [
-    {
-      command: `node "${hookScripts.beforeSubmitPrompt}"`,
-      _source: pluginName,
-    },
-  ],
-  preToolUse: [
-    {
-      command: `node "${hookScripts.preToolUse}"`,
-      matcher: "Edit|Write|NotebookEdit",
-      _source: pluginName,
-    },
-  ],
-  postToolUse: [
-    {
-      command: `node "${hookScripts.postToolUse}"`,
-      matcher: "Edit|Write|NotebookEdit",
-      _source: pluginName,
-    },
-  ],
-  ...(stopPrompt
-    ? {
-        stop: [
-          {
-            type: "prompt",
-            prompt: stopPrompt,
-            _source: pluginName,
-          },
-        ],
-      }
-    : {}),
-};
+  const keptHooks = [];
+  for (const hook of block.hooks) {
+    if (!hook || typeof hook !== "object") continue;
+    if (isLegacyConflictHook(hook)) continue;
+    if (hook.type !== "command") {
+      keptHooks.push(hook);
+      continue;
+    }
+    const target = parseNodeTarget(hook.command);
+    if (!target) {
+      keptHooks.push(hook);
+      continue;
+    }
+    const normalized = target.replace(/\//g, path.sep);
+    if (!pathExists(target) && !pathExists(normalized)) {
+      continue;
+    }
+    keptHooks.push(hook);
+  }
+
+  const unique = uniqueHooks(keptHooks);
+  if (unique.length === 0) return null;
+  return {
+    ...block,
+    matcher: String(block.matcher || ""),
+    hooks: unique,
+  };
+}
+
+function mergeMatcherBlocks(existingBlocks, desiredBlocks) {
+  const out = [];
+  const matcherToIndex = new Map();
+
+  for (const block of existingBlocks || []) {
+    const cleaned = cleanHooksInBlock(block);
+    if (!cleaned) continue;
+    const matcher = String(cleaned.matcher || "");
+    matcherToIndex.set(matcher, out.length);
+    out.push(cleaned);
+  }
+
+  for (const desiredBlock of desiredBlocks || []) {
+    const cleanedDesired = cleanHooksInBlock(desiredBlock);
+    if (!cleanedDesired) continue;
+    const matcher = String(cleanedDesired.matcher || "");
+    if (!matcherToIndex.has(matcher)) {
+      matcherToIndex.set(matcher, out.length);
+      out.push(cleanedDesired);
+      continue;
+    }
+    const idx = matcherToIndex.get(matcher);
+    const mergedHooks = uniqueHooks([
+      ...(out[idx].hooks || []),
+      ...(cleanedDesired.hooks || []),
+    ]);
+    out[idx] = { ...out[idx], hooks: mergedHooks };
+  }
+
+  return out
+    .map((block) => cleanHooksInBlock(block))
+    .filter((block) => block !== null);
+}
+
+const desired = loadDesiredHooksFromTemplate();
 
 const prev = readJsonOrDefault(cursorHooksPath, { version: 1, hooks: {} });
 const next = {
   version: 1,
-  hooks: { ...(prev.hooks || {}) },
+  hooks: {},
 };
 
-// Merge + prune per hook.
-for (const [hookName, addEntries] of Object.entries(desired)) {
-  const existing = Array.isArray(next.hooks[hookName])
-    ? next.hooks[hookName]
+const allEventNames = new Set([
+  ...Object.keys(prev.hooks || {}),
+  ...Object.keys(desired),
+]);
+
+for (const eventName of allEventNames) {
+  const existingBlocks = Array.isArray(prev.hooks?.[eventName])
+    ? prev.hooks[eventName]
     : [];
-  const merged = [...existing, ...addEntries];
-  const pruned = pruneBrokenCommandEntries(merged);
-  next.hooks[hookName] = uniqueByCommand(pruned);
+  const desiredBlocks = Array.isArray(desired[eventName])
+    ? desired[eventName]
+    : [];
+  const merged = mergeMatcherBlocks(existingBlocks, desiredBlocks);
+  if (merged.length > 0) {
+    next.hooks[eventName] = merged;
+  }
 }
 
-// Also prune broken command entries in *all* hooks (keeps config clean).
-for (const [hookName, entries] of Object.entries(next.hooks)) {
-  if (!Array.isArray(entries)) continue;
-  next.hooks[hookName] = uniqueByCommand(
-    pruneBrokenCommandEntries(entries).filter(
-      (entry) => !isLegacyConflictEntry(entry),
-    ),
-  );
+// Final safety pass in case any legacy/broken entries remain.
+for (const [eventName, blocks] of Object.entries(next.hooks)) {
+  if (!Array.isArray(blocks)) continue;
+  const cleanedBlocks = blocks
+    .map((block) => cleanHooksInBlock(block))
+    .filter((block) => block !== null);
+  if (cleanedBlocks.length > 0) {
+    next.hooks[eventName] = cleanedBlocks;
+  } else {
+    delete next.hooks[eventName];
+  }
 }
 
 // Backup if changing.

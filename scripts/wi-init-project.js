@@ -51,17 +51,20 @@ function main() {
   const kbRoot = path.join(repoRoot, ".whytcard");
   const projRoot = path.join(kbRoot, "projects", projectId);
 
-  // Directories
+  // Directories (base scaffold + canonical working dirs)
   for (const d of [
     kbRoot,
     path.join(kbRoot, "projects"),
     projRoot,
     path.join(projRoot, "00_orchestrator"),
     path.join(projRoot, "01_foundation", "steps", "S001-project-scaffold"),
-    path.join(projRoot, "agents"),
-    path.join(projRoot, "reviews"),
-    path.join(projRoot, "artifacts"),
     path.join(projRoot, "01_foundation", "steps", "S001-project-scaffold", "evidence"),
+    path.join(projRoot, "pipeline", "steps"),
+    path.join(projRoot, "research"),
+    path.join(projRoot, "brainstorms"),
+    path.join(projRoot, "plans"),
+    path.join(projRoot, "reviews"),
+    path.join(projRoot, "proofs"),
   ]) {
     ensureDir(d);
   }

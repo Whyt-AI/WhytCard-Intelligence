@@ -1,5 +1,5 @@
 ---
-description: "Improve a project with audit, plan, fixes, and proof. Uses wi-improve-project."
+description: "Improve a project with audit, plan, fixes, and proof. Uses sk-wi-improve-project."
 disable-model-invocation: true
 ---
 
@@ -9,7 +9,7 @@ Mode: `autopilot-safe`
 
 Use when the user wants the existing project audited and improved.
 
-Invoke `wi-improve-project` and follow it exactly.
+Invoke `sk-wi-improve-project` and follow it exactly.
 
 Return:
 

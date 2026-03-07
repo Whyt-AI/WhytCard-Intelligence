@@ -1,5 +1,5 @@
 ---
-description: "Run the full WhytCard workflow end-to-end. Uses wi-whytcard."
+description: "Run the full WhytCard workflow end-to-end. Uses sk-wi-whytcard."
 disable-model-invocation: true
 ---
 
@@ -9,7 +9,7 @@ Mode: `autopilot-full`
 
 Use when the user explicitly wants the complete WhytCard pipeline in one run.
 
-Invoke `wi-whytcard` and follow it exactly.
+Invoke `sk-wi-whytcard` and follow it exactly.
 
 Return:
 

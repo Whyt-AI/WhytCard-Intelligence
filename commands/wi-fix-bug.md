@@ -1,5 +1,5 @@
 ---
-description: "Fix a bug with repro, root cause, fix, and proof. Uses wi-fix-bug."
+description: "Fix a bug with repro, root cause, fix, and proof. Uses sk-wi-fix-bug."
 disable-model-invocation: true
 ---
 
@@ -9,7 +9,7 @@ Mode: `autopilot-safe`
 
 Use when the user reports incorrect behavior and wants a verified fix.
 
-Invoke `wi-fix-bug` and follow it exactly.
+Invoke `sk-wi-fix-bug` and follow it exactly.
 
 Return:
 

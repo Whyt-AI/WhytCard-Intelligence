@@ -1,5 +1,5 @@
 ---
-description: "Run visual browser verification with screenshots and checks. Uses wi-check-browser."
+description: "Run visual browser verification with screenshots and checks. Uses sk-wi-check-browser."
 disable-model-invocation: true
 ---
 
@@ -9,7 +9,7 @@ Mode: `interactive`
 
 Use when UI work needs visual verification.
 
-Invoke `wi-check-browser` and follow it exactly.
+Invoke `sk-wi-check-browser` and follow it exactly.
 
 Return:
 

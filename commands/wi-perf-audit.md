@@ -1,5 +1,5 @@
 ---
-description: "Audit performance bottlenecks with proof. Uses wi-perf-audit."
+description: "Audit performance bottlenecks with proof. Uses sk-wi-perf-audit."
 disable-model-invocation: true
 ---
 
@@ -9,7 +9,7 @@ Mode: `interactive`
 
 Use when performance claims need measurement and prioritization.
 
-Invoke `wi-perf-audit` and follow it exactly.
+Invoke `sk-wi-perf-audit` and follow it exactly.
 
 Return:
 

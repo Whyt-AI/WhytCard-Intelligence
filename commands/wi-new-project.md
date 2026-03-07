@@ -1,5 +1,5 @@
 ---
-description: "Create a new project end-to-end with pipeline and proof. Uses wi-new-project."
+description: "Create a new project end-to-end with pipeline and proof. Uses sk-wi-new-project."
 disable-model-invocation: true
 ---
 
@@ -9,7 +9,7 @@ Mode: `autopilot-full`
 
 Use when the user wants a new project scaffolded and executed with minimal interruption.
 
-Invoke `wi-new-project` and follow it exactly.
+Invoke `sk-wi-new-project` and follow it exactly.
 
 Return:
 

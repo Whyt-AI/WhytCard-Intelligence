@@ -1,0 +1,65 @@
+{
+  "description": "WhytCard Intelligence orchestrator hooks — enforces delegation, quality gates, and pipeline discipline. (Claude Code)",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$PLUGIN_ROOT/hooks/wi-session-start.js\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$PLUGIN_ROOT/hooks/wi-prompt-dispatch.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$PLUGIN_ROOT/hooks/wi-pre-edit-gate.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$PLUGIN_ROOT/hooks/wi-post-edit-verify.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "IMPORTANT: If stop_hook_active is true in the input, return 'allow' immediately to prevent infinite loops.\n\nBefore stopping, verify the orchestrator protocol was followed with concrete named proof, not vague claims.\n\n1. DELEGATION: Name the subagents launched and the skill/step each handled. If application-code work happened without named subagents, return 'deny'.\n2. EVIDENCE_PATHS: Name the concrete evidence paths that back the work (for example `.whytcard/.../evidence/...`, logs, saved artifacts). If you cannot cite paths, return 'deny'.\n3. GATE_COMMANDS: Name the exact commands run for the relevant gates (lint, type-check, test, build, targeted validation). If the commands or outcomes are missing, return 'deny'.\n4. UI_PROOF: If visual files changed, name the screenshot/video paths and confirm viewport coverage. If missing, return 'deny'.\n5. RESEARCH_AND_VERSIONS: If recommendations or dependency updates were made, name the official source, bad/community source, data source, and any live version checks used. If missing, return 'deny'.\n6. PROACTIVE_CONTEXT: If the task depended on broad reading, research, or diagnosis, name the additional files read, sources checked, or delegated investigation used to remove material uncertainty. If the result still rests on the first plausible answer or on unsupported assumptions, return 'deny'.\n7. PIPELINE: If this was part of a pipeline, confirm evidence was written under `.whytcard/projects/...`. If not, return 'deny'.\n\nIf every relevant check has concrete named proof, return 'allow'. Otherwise return 'deny'. Keep the answer minimal.",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

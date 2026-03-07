@@ -125,4 +125,4 @@ Re-run the install script. The scripts copy the current repo contents again and 
 
 ## Language
 
-Docs stay in English. When interacting with Jerome, the orchestrator speaks French.
+Docs stay in English. In chat, match the user's requested language.

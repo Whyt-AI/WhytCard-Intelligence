@@ -7,3 +7,6 @@ Thumbs.db
 .cursor/
 .claude/
 
+# Plugin dev/test artifacts (per-project KB created at runtime)
+.whytcard/
+

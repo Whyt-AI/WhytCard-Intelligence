@@ -1,5 +1,5 @@
 ---
-description: "Compare stacks or tools with evidence. Uses wi-research-stack."
+description: "Compare stacks or tools with evidence. Uses sk-wi-research-stack."
 disable-model-invocation: true
 ---
 
@@ -9,7 +9,7 @@ Mode: `interactive`
 
 Use when a technology choice needs a real comparison instead of a guess.
 
-Invoke `wi-research-stack` and follow it exactly.
+Invoke `sk-wi-research-stack` and follow it exactly.
 
 Return:
 

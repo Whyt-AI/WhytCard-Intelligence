@@ -1,5 +1,5 @@
 ---
-description: "Run structured web research with official docs, caveats, and data. Uses wi-search-web."
+description: "Run structured web research with official docs, caveats, and data. Uses sk-wi-search-web."
 disable-model-invocation: true
 ---
 
@@ -9,7 +9,7 @@ Mode: `interactive`
 
 Use when you need current external information before making a decision.
 
-Invoke `wi-search-web` and follow it exactly.
+Invoke `sk-wi-search-web` and follow it exactly.
 
 Return:
 

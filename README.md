@@ -77,7 +77,7 @@ The installer is Cursor-only and also cleans known legacy conflicts (`whytcardAI
 
 ## Language
 
-Internal docs stay in English. When interacting with Jerome, the orchestrator speaks French.
+Internal docs stay in English. Match the user's language automatically in chat responses.
 
 ## License
 

@@ -1,5 +1,5 @@
 ---
-description: "Add a feature with pipeline steps and proof. Uses wi-add-feature."
+description: "Add a feature with pipeline steps and proof. Uses sk-wi-add-feature."
 disable-model-invocation: true
 ---
 
@@ -9,7 +9,7 @@ Mode: `autopilot-safe`
 
 Use when the user wants new functionality added to an existing project.
 
-Invoke `wi-add-feature` and follow it exactly.
+Invoke `sk-wi-add-feature` and follow it exactly.
 
 Return:
 

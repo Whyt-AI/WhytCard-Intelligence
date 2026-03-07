@@ -98,7 +98,7 @@ if (Test-Path $RulesSrcDir) {
 }
 
 Write-Host ""
-Write-Host "[2/2] Installing global Cursor hooks..." -ForegroundColor Yellow
+Write-Host "[2/3] Installing global Cursor hooks..." -ForegroundColor Yellow
 $cursorHooksMerge = Join-Path (Join-Path $RepoRoot "scripts") "install-cursor-hooks-merge.js"
 node $cursorHooksMerge $CursorHooksPath $PluginName $TargetDir
 if ($LASTEXITCODE -ne 0) { throw "Cursor hooks merge failed" }

@@ -1,5 +1,5 @@
 ---
-description: "Review a codebase across quality, security, perf, and tests. Uses wi-review-codebase."
+description: "Review a codebase across quality, security, perf, and tests. Uses sk-wi-review-codebase."
 disable-model-invocation: true
 ---
 
@@ -9,7 +9,7 @@ Mode: `interactive`
 
 Use when the user wants an audit or review instead of immediate implementation.
 
-Invoke `wi-review-codebase` and follow it exactly.
+Invoke `sk-wi-review-codebase` and follow it exactly.
 
 Return:
 

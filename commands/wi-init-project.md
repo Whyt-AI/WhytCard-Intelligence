@@ -1,5 +1,5 @@
 ---
-description: "Initialize the per-project .whytcard scaffold. Uses wi-init-project."
+description: "Initialize the per-project .whytcard scaffold. Uses sk-wi-init-project."
 disable-model-invocation: true
 ---
 
@@ -9,7 +9,7 @@ Mode: `autopilot-safe`
 
 Use when you need to create or repair the base `.whytcard/projects/<id>/` scaffold.
 
-Invoke `wi-init-project` and follow it exactly.
+Invoke `sk-wi-init-project` and follow it exactly.
 
 Return:
 

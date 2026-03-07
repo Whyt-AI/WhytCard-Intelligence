@@ -216,9 +216,9 @@ Skills in `skills/` are the operating manuals for subagents.
 
 Examples:
 
-- web research: `skills/wi-search-web/SKILL.md`
-- code review: `skills/wi-review-codebase/SKILL.md`
-- feature work: `skills/wi-add-feature/SKILL.md`
+- web research: `skills/sk-wi-search-web/SKILL.md`
+- code review: `skills/sk-wi-review-codebase/SKILL.md`
+- feature work: `skills/sk-wi-add-feature/SKILL.md`
 
 The skill teaches `how`. Your instruction teaches `what`, `why`, and `where`.
 

@@ -37,9 +37,9 @@ Do not use absolute machine paths in docs, outputs, or hardcoded instructions.
    - `~/.cursor/commands` contains `wi-*` commands
    - `~/.cursor/skills` contains `wi-*` skills
    - `~/.cursor/rules` contains WhytCard rules
-4. Enforce workspace rule activation:
-   - ensure `.cursor/rules/whytcard-orchestrator-enforced.mdc` exists
-   - ensure it contains `alwaysApply: true`
+4. Enforce rule activation:
+   - ensure `~/.cursor/rules/orchestrator-identity.mdc` exists (installed by plugin)
+   - the plugin rule has `alwaysApply: true` for global enforcement
 5. Verify hook health with smoke tests:
    - `node hooks/wi-session-start.js`
    - `echo '{"prompt":"/wi-add-feature"}' | node hooks/wi-prompt-dispatch.js`
@@ -62,7 +62,7 @@ Setup is complete only if all checks pass:
 - [ ] installer executed successfully
 - [ ] WhytCard hooks present in Cursor hooks config
 - [ ] WhytCard rules/skills/commands present
-- [ ] workspace enforcement rule present and `alwaysApply: true`
+- [ ] workspace/global rule present (orchestrator-identity.mdc with `alwaysApply: true`)
 - [ ] hook smoke tests produce valid output (no missing-module or missing-file errors)
 - [ ] no legacy/conflicting WhytCard artifacts remain
 

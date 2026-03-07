@@ -1,5 +1,5 @@
 ---
-description: "Audit security posture, secrets, and vulnerabilities. Uses wi-security-audit."
+description: "Audit security posture, secrets, and vulnerabilities. Uses sk-wi-security-audit."
 disable-model-invocation: true
 ---
 
@@ -9,7 +9,7 @@ Mode: `interactive`
 
 Use when the user wants a security-oriented audit before or after implementation.
 
-Invoke `wi-security-audit` and follow it exactly.
+Invoke `sk-wi-security-audit` and follow it exactly.
 
 Return:
 
