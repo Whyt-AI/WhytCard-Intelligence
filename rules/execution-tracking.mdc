@@ -1,9 +1,8 @@
----
-description: "Execution tracking — pipeline discipline for the orchestrator during multi-step execution"
+description: "Execution tracking - pipeline discipline for the orchestrator during multi-step execution"
 alwaysApply: true
 ---
 
-# Execution Tracking — Pipeline Discipline
+# Execution Tracking - Pipeline Discipline
 
 When running a pipeline, follow this protocol to track progress, verify each step, and catch failures before they compound.
 
@@ -11,22 +10,30 @@ When running a pipeline, follow this protocol to track progress, verify each ste
 
 - A step is not complete until its evidence is validated against the acceptance criteria.
 - If gates (lint, type-check, test, build) are not all green, the step stays open.
-- If acceptance criteria are partially met, the step stays open — partial is not done.
+- If acceptance criteria are partially met, the step stays open - partial is not done.
+- If the user requested exhaustive reading, the corpus is not fully understood until every requested item has been read and logged.
+- If a step depended on broad reading, research, or diagnosis, the context-gathering evidence must exist before the step can close.
 
 ## Before delegating each step
 
-- [ ] Re-read the plan (`.whytcard/projects/{id}/plans/`) — do not rely on memory
+- [ ] Re-read the plan (`.whytcard/projects/{id}/plans/`) - do not rely on memory
 - [ ] Confirm which step you are on from the pipeline state
 - [ ] Verify that the previous step's evidence was validated
 - [ ] Write instruction.md and acceptance.md for the current step
+- [ ] Keep a read ledger when exhaustive reading was requested
+- [ ] Use the canonical `.whytcard/projects/{id}/` layout for every new artifact
+- [ ] If material uncertainty remains, schedule another read/research/delegation loop before execution
 
-## After receiving agent output
+## After receiving subagent output
 
-- [ ] Scope: did the agent only touch files within the declared scope?
-- [ ] Gates: lint, type-check, test, build — all green?
+- [ ] Scope: did the subagent only touch files within the declared scope?
+- [ ] Gates: lint, type-check, test, build - all green?
 - [ ] Acceptance: every criterion in acceptance.md satisfied?
 - [ ] Quality: no shortcuts, no placeholders, no mocks where real integrations were specified?
 - [ ] Update pipeline state in `.whytcard/projects/{id}/pipeline/`
+- [ ] Verify that any claim of "fully read" or "fully understood" matches the read ledger
+- [ ] Verify that execution steps live under `pipeline/steps/`, not legacy phase families
+- [ ] Verify that any context-dependent conclusion is backed by actual reads, research, or diagnostics rather than assumption
 
 ## On PASS
 
@@ -34,23 +41,26 @@ Mark step completed. Log evidence. Move to next step.
 
 ## On FAIL
 
-1. Read the gate logs and patch diff — identify root cause
+1. Read the gate logs and patch diff - identify root cause
 2. Classify: code bug? ambiguous instruction? missing prerequisite?
-3. Improve instruction.md — add the missing constraint, provide an example, or split the step
-4. Re-delegate with the corrected instruction to a fresh agent
+3. Improve instruction.md - add the missing constraint, provide an example, or split the step
+4. Re-delegate with the corrected instruction to a fresh subagent
 5. The corrected instruction prevents this failure in future pipelines
 
 ## Red flags
 
 These patterns signal that execution discipline is breaking down:
 
-- Building files not listed in the current increment — the agent is drifting from scope
-- Skipping verification steps — speed without proof creates hidden debt
-- Not updating the execution log — the pipeline loses its memory
-- Making design decisions that should have been in the plan — execution is not the time for architecture
-- Working from memory instead of re-reading plan/log files — memory drifts, files don't
+- Building files not listed in the current increment - the subagent is drifting from scope
+- Skipping verification steps - speed without proof creates hidden debt
+- Not updating the execution log - the pipeline loses its memory
+- Making design decisions that should have been in the plan - execution is not the time for architecture
+- Working from memory instead of re-reading plan/log files - memory drifts, files do not
+- Claiming exhaustive reading after a partial read
+- Writing execution steps outside `pipeline/steps/`
+- Closing a step while important uncertainty is still unresolved
 
-When you spot these in an agent's output, the fix is in the instruction: add explicit scope constraints, require verification evidence, or split the step into smaller actions.
+When you spot these in a subagent's output, the fix is in the instruction: add explicit scope constraints, require verification evidence, or split the step into smaller actions.
 
 ## Session continuity
 
@@ -61,10 +71,27 @@ If the session gets long:
 
 ## How to improve the instruction
 
-Agent touched out-of-scope files → add: "You may ONLY modify files in [explicit list]. Do not touch anything else."
+Agent touched out-of-scope files -> add: "You may ONLY modify files in [explicit list]. Do not touch anything else."
 
-Agent skipped verification → add: "After completing the change, run [lint/test/build command] and include the full output in your evidence."
+Agent skipped verification -> add: "After completing the change, run [lint/test/build command] and include the full output in your evidence."
 
-Agent made architecture decisions → add: "Follow the design exactly as specified in instruction.md. If you see a better approach, document it in notes.md but do not implement it."
+Agent made architecture decisions -> add: "Follow the design exactly as specified in instruction.md. If you see a better approach, document it in notes.md but do not implement it."
 
-Agent worked from stale context → add: "Before starting, read [specific file paths] to get current state. Do not assume anything from prior context."
+Agent worked from stale context -> add: "Before starting, read [specific file paths] to get current state. Do not assume anything from prior context."
+
+Agent claimed exhaustive reading too early -> add: "List the requested corpus first. Report exactly what you have read and what remains unread. Do not claim complete understanding until every requested item has been read."
+
+Agent wrote to legacy KB paths -> add: "Use `.whytcard/projects/{id}/pipeline/steps/` for execution steps and keep research, brainstorms, plans, reviews, and proofs in their canonical top-level directories."
+
+## Canonical `.whytcard` layout
+
+Use these locations consistently:
+
+- `pipeline/steps/` for execution steps
+- `research/` for research artifacts
+- `brainstorms/` for brainstorm outputs
+- `plans/` for execution plans
+- `reviews/` for review outputs
+- `proofs/` for repo-level verification proof
+
+Do not use obsolete numbered phase folders for execution work.

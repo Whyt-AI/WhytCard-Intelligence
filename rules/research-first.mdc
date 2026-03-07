@@ -11,6 +11,7 @@ When an agent delivers research, use this grid to evaluate. Incomplete research 
 
 - If research is incomplete, do not proceed — continue researching or re-delegate.
 - If sources are missing, the finding is UNVERIFIED — treat it as unproven.
+- If material uncertainty remains, do not conclude from the first plausible answer — gather more context or re-delegate.
 - If a dependency decision appears in the research, apply `version-check.mdc` before recommending.
 - If a UI direction is proposed, include named UI references and apply `visual-verify.mdc` after implementation.
 
@@ -24,6 +25,7 @@ When an agent delivers research, use this grid to evaluate. Incomplete research 
 - [ ] Sources cited with URLs
 - [ ] Versions verified live (not from training data)
 - [ ] Confidence level stated: HIGH (3+ sources agree) / MEDIUM (2 sources) / LOW (1 source or conflicting)
+- [ ] Material unknowns either resolved through more research or stated explicitly as blockers
 
 ## Steps to include in agent instructions
 
@@ -67,6 +69,7 @@ Never trust training data. Always search: "[library] latest version [current yea
 - Include confidence level: HIGH / MEDIUM / LOW
 - List unknowns explicitly
 - If evidence contradicts the initial idea, evidence wins
+- If important unknowns remain, continue researching before concluding when feasible
 
 ## Expected output structure
 
@@ -84,6 +87,7 @@ Never trust training data. Always search: "[library] latest version [current yea
 - Recommendation without alternatives → no comparison
 - No bad-angle research → blind spot on pitfalls
 - Citing unverified URLs → agent hallucinated sources
+- Stopping at the first plausible answer while important unknowns remain → premature conclusion
 
 ## Anti-patterns
 

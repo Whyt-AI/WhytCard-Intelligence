@@ -5,7 +5,17 @@ description: Autonomously diagnose and fix a bug. Reproduces the issue, identifi
 
 # Fix Bug
 
-Autopilot mode. You systematically find and fix the bug.
+Mode: `autopilot-safe`
+
+Systematically reproduce, diagnose, fix, and prove the bug fix.
+
+## Hard contract
+
+- Use runtime evidence, not guesswork.
+- Use official docs as the primary model for host/platform behavior.
+- Keep community bug reports as caveats, not as the core model.
+- If exhaustive reading was requested, list the requested corpus and do not claim full understanding until all requested items were read.
+- Use `.whytcard/projects/{id}/pipeline/steps/` for real execution steps.
 
 ## Workflow
 
@@ -23,14 +33,14 @@ From the user's report, extract:
 
 ### 2. Reproduce
 
-Launch a diagnostic agent to:
+Launch a diagnostic subagent to:
 - Find the relevant code paths
 - Reproduce the bug (run the code, check logs)
 - Confirm the exact failure point (file:line)
 
 ### 3. Diagnose root cause
 
-Launch an analysis agent to:
+Launch an analysis subagent to:
 - Trace the execution path
 - Identify WHY it fails (not just WHERE)
 - Check if this is a regression (was it working before?)
@@ -40,16 +50,17 @@ Launch an analysis agent to:
 
 Create a single step in:
 
-`.whytcard/projects/{id}/02_bugfix/steps/S001-<slug>/`
+`.whytcard/projects/{id}/pipeline/steps/S001-bugfix-<slug>/`
 
-- `instruction.md` — The specific fix with root cause context
-- `acceptance.md` — Bug no longer reproducible + all existing tests pass + new test covering the bug
- - `evidence/` — repro logs, screenshots, command outputs
+- `instruction.md` - The specific fix with root cause context
+- `acceptance.md` - Bug no longer reproducible + all existing tests pass + new test covering the bug
+- `evidence/` - repro logs, screenshots, command outputs
 
-Delegate to an implementation agent.
+Delegate to an implementation subagent.
 
 ### 5. Verify
 
 - Confirm the bug is fixed
 - Confirm no regressions (all gates green)
-- If the bug had no test coverage: the agent must add one
+- If the bug had no test coverage: the subagent must add one
+- Save repo-level verification proof under `.whytcard/projects/{id}/proofs/`

@@ -1,6 +1,24 @@
 ---
-description: "Performance audit (bottlenecks + proof) — uses the wi-perf-audit skill."
+description: "Audit performance bottlenecks with proof. Uses wi-perf-audit."
 disable-model-invocation: true
 ---
 
-Invoke the `wi-perf-audit` skill and follow it exactly.
+# /wi-perf-audit
+
+Mode: `interactive`
+
+Use when performance claims need measurement and prioritization.
+
+Invoke `wi-perf-audit` and follow it exactly.
+
+Return:
+
+- prioritized bottlenecks
+- measurement evidence
+- audit output in `.whytcard/projects/{id}/reviews/` or `.whytcard/projects/{id}/research/` as appropriate
+
+Non-negotiables:
+
+- measure before recommending
+- keep host-platform behavior separate from implementation caveats
+- do not claim exhaustive understanding after partial reading

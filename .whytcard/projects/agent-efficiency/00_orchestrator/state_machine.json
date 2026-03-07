@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "projectId": "agent-efficiency",
+  "startDate": "2026-03-06",
+  "currentPhase": "01_foundation",
+  "phases": [
+    {
+      "id": "01_foundation",
+      "name": "Foundation",
+      "status": "PENDING",
+      "steps": [
+        {
+          "id": "S001",
+          "slug": "project-scaffold",
+          "title": "Create .whytcard project scaffold",
+          "agent": "orchestrator",
+          "status": "PENDING",
+          "attempts": 0
+        }
+      ]
+    }
+  ]
+}

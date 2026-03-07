@@ -1,50 +1,87 @@
 # WhytCard Intelligence
 
-AI orchestration plugin for **Cursor** and **Claude Code**.
+Practical orchestration plugin for Cursor and Claude Code.
 
-Goal: provide an orchestrator that **decomposes**, **delegates** to specialized sub-agents, **verifies** with concrete proof, and **iterates** until the result is clean.
+The plugin teaches an orchestrator to research first, delegate to specialized subagents, keep proof, and iterate until the result is actually validated.
 
-## Installation (Windows)
+## Platform model: official surfaces first
 
-From this folder:
+This repo documents two different host products with overlapping but non-identical features.
 
-```powershell
-.\scripts\install-plugin.ps1
-```
+- Cursor official concepts: Ask, Agent, Plan, Debug, subagents, hooks, plugins, rules, skills/commands, and Cloud Agents.
+- Claude Code official concepts: interactive CLI workflows, settings scopes, subagents, hooks, skills/slash commands, plugins, and CLI configuration.
+- This plugin adds its own operating wrappers on top: `interactive`, `autopilot-safe`, and `autopilot-full`.
 
-Then in Cursor: **Ctrl+Shift+P → “Developer: Reload Window”** (or restart Cursor).
+Do not present Cursor and Claude Code as perfectly symmetrical surfaces. Some concepts overlap, but the install paths, manifests, hook wiring, and UX differ.
 
-## Installation (Linux/macOS)
+## Plugin operating wrappers
 
-From this folder:
+These are plugin conventions, not official platform modes:
 
-```bash
-bash ./scripts/install-plugin.sh
-```
+- `interactive`: discuss, research, compare, and converge with the user.
+- `autopilot-safe`: continue without repeated approval for reversible work, but escalate destructive or irreversible decisions.
+- `autopilot-full`: run the full pipeline with minimal interruption, while still escalating unsafe or irreversible decisions.
 
-Then restart Cursor (or Reload Window).
+## Canonical `.whytcard` layout
 
-## Quick check
+Canonical project knowledge lives under `.whytcard/projects/<projectId>/`.
 
-In Cursor chat:
-- type `/wi` → you should see `/wi-brainstorm`, `/wi-add-feature`, etc.
-- run `/wi-whytcard` to execute the full workflow in one run (init → brainstorm → improve → review)
-- run `/wi-init-project` once per repo to initialize `.whytcard/projects/<id>/...`
+Base scaffold created by `wi-init-project`:
 
-## What the script installs (no manual steps)
+- `00_orchestrator/`
+- `01_foundation/steps/S001-project-scaffold/`
 
-The script installs:
-- the plugin into `~/.cursor/plugins/whytcard-intelligence`
-- Cursor **commands** into `~/.cursor/commands/` (so `/wi-*` appears)
-- Cursor **skills** into `~/.cursor/skills/`
-- Cursor **rules** into `~/.cursor/rules/`
-- Claude enablement in `~/.claude/settings.json` + `~/.claude/plugins/installed_plugins.json`
+Canonical working layout once real work starts:
+
+- `pipeline/steps/` - execution steps, each with `instruction.md`, `acceptance.md`, and `evidence/`
+- `research/` - official-doc research notes and caveats
+- `brainstorms/` - interactive decision records
+- `plans/` - execution plans
+- `reviews/` - audit and review outputs
+- `proofs/` - repo-level proof such as gates, screenshots, and walkthrough artifacts
+
+`pipeline/steps/` is the source of truth for real execution. Older numbered phase folders are obsolete and must not be reused.
+
+## Exhaustive-reading contract
+
+If the user asks for exhaustive reading, you must:
+
+1. Enumerate the requested corpus.
+2. Read every requested item before claiming understanding of the whole.
+3. State exactly what has been read and what has not yet been read.
+4. Never say "I read everything", "I understand the full corpus", or similar after a partial read.
+
+Partial reading is acceptable only if you label it precisely as partial.
+
+## Command wrappers and skills
+
+- `commands/*.md` are thin slash-command wrappers.
+- `skills/*/SKILL.md` are the detailed operating manuals.
+- Wrappers must stay short, explicit, and aligned with the corresponding skill.
+- Use `subagent` as the primary term for delegated specialized work.
+
+## Installation
+
+Use `INSTALL.md` for the actual install flow, manifest behavior, and hook wiring details.
+
+Quick start:
+
+- Windows: `.\scripts\install-plugin.ps1`
+- Linux/macOS: `bash ./scripts/install-plugin.sh`
+
+Then reload Cursor or restart the host tool.
+
+## Quick verification
+
+- In Cursor chat, type `/wi` and confirm the `/wi-*` commands are available.
+- Run `/wi-init-project` once in a repo to create the base `.whytcard/projects/<id>/...` scaffold.
+- Run `/wi-whytcard` only when you explicitly want the full end-to-end pipeline.
 
 ## Language
 
-Internal docs are in English, but when interacting with **Jerome (the repo owner)**, the orchestrator must **speak French**.
+Internal docs stay in English. When interacting with Jerome, the orchestrator speaks French.
 
 ## License
 
-MIT — see `LICENSE`.
+MIT. See `LICENSE`.
 

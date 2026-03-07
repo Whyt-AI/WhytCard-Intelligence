@@ -164,12 +164,14 @@ const stackLine = stack.length > 0
   : "";
 
 const configLine = `\nProject config: viewports=${JSON.stringify(config.viewports)}, visualVerification=${config.visualVerification}, darkModeCheck=${config.darkModeCheck}`;
+const proactiveLine = "\nRuntime rule: Gather missing context proactively when it materially improves correctness or execution. If material uncertainty remains, keep reading, researching, or delegating; never stop at the first plausible answer.";
+const delegationLine = "\nRuntime rule: Use subagents proactively for broad reading, deep research, review, diagnosis, and implementation when that reduces uncertainty or context load.";
 
 const onboarding = buildOnboardingContext(cwd);
 
 const context = `<WHYTCARD-ORCHESTRATOR>
 ${identity}
-${stackLine}${configLine}
+${stackLine}${configLine}${proactiveLine}${delegationLine}
 </WHYTCARD-ORCHESTRATOR>`;
 
 process.stdout.write(injectContext("SessionStart", context + onboarding));

@@ -5,7 +5,16 @@ description: Autonomously add a feature to an existing project. Analyzes impact,
 
 # Add Feature
 
-Autopilot mode. You analyze, decompose, implement, and verify the new feature.
+Mode: `autopilot-safe`
+
+Analyze, decompose, implement, and verify the feature without repeated approval for reversible work.
+
+## Hard contract
+
+- Use official docs as the primary product/platform model.
+- Use community findings only as caveats.
+- If exhaustive reading was requested, list the requested corpus and do not claim full understanding until all requested items were read.
+- Use `.whytcard/projects/{id}/pipeline/steps/` for real execution steps.
 
 ## Workflow
 
@@ -22,7 +31,7 @@ From the user's request, extract:
 
 ### 2. Impact analysis
 
-Launch an exploration agent to:
+Launch an exploration subagent to:
 - Read the relevant parts of the codebase
 - Identify files that will need modification
 - Check for existing patterns to follow
@@ -39,20 +48,23 @@ Break the feature into atomic micro-actions. Each action:
 
 Create one step per micro-action under:
 
-`.whytcard/projects/{id}/02_feature/steps/`
+`.whytcard/projects/{id}/pipeline/steps/`
 
 Each step is a folder like `S001-<slug>/` with:
 - `instruction.md`
 - `acceptance.md`
 - `evidence/` (logs, screenshots, proof)
 
+Use descriptive slugs such as `S010-feature-login-form`.
+
 ### 5. Execute
 
-Delegate each step to an implementation agent. Review evidence after each. Iterate on failure.
+Delegate each step to an implementation subagent. Review evidence after each. Iterate on failure.
 
 ### 6. Verify
 
 After all steps:
 - Run full gate suite (lint, type-check, test, build)
-- Launch a review agent to check the feature quality
-- If UI: launch a browser agent for visual verification (use wi-check-browser skill)
+- Save final proof under `.whytcard/projects/{id}/proofs/`
+- Launch a review subagent to check the feature quality
+- If UI: launch a browser subagent for visual verification (use wi-check-browser skill)

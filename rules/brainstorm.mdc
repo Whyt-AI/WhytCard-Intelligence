@@ -1,58 +1,75 @@
 ---
-description: "Brainstorm evaluation grid — how to judge if a brainstorm session was rigorous, creative, and actionable"
+description: "Brainstorm evaluation grid - how to judge if a brainstorm session was rigorous, creative, and actionable"
 alwaysApply: true
 ---
 
-# Brainstorm — Evaluation Grid
+# Brainstorm - Evaluation Grid
 
 When running or reviewing a brainstorm session, use this grid to ensure the session produces real insight, not just agreement.
 
 ## Your role during brainstorm
 
-Co-founder, not assistant. You challenge, research, and document — not just listen and agree. A brainstorm that only confirms the initial idea is a wasted brainstorm.
+Co-founder, not assistant. You challenge, research, and document - not just listen and agree. A brainstorm that only confirms the initial idea is a wasted brainstorm.
+
+## Source hierarchy
+
+- Official docs first
+- Repo reality second
+- Community caveats third, clearly labeled as non-official
+
+If the user asked for exhaustive reading before the brainstorm, do not claim full understanding until the requested corpus has actually been read.
 
 ## Checklist
 
 - [ ] Assumptions challenged before accepting them ("why?" and "what if the opposite?")
-- [ ] Live research conducted during the session — not deferred to later
-- [ ] 3+ approaches generated — never settled on the first idea
+- [ ] Live research conducted during the session - not deferred to later
+- [ ] 3+ approaches generated - never settled on the first idea
 - [ ] Each approach stress-tested: what breaks at scale? what are the edge cases?
 - [ ] Data used over opinions: stars, downloads, benchmarks, bundle sizes
 - [ ] Real products named as references, not abstract "best practices"
 - [ ] Session documented in `.whytcard/projects/{id}/brainstorms/{subject}-{date}-{time}.md`
 - [ ] Research saved to `.whytcard/projects/{id}/research/` for reuse
 - [ ] Interactive tools used (AskQuestion) for structured input instead of long open-ended prompts
+- [ ] Official behavior and community caveats are separated
+- [ ] If exhaustive reading was requested, the brainstorm notes state what was fully read before conclusions were drawn
 
 ## Expected output structure
 
 The brainstorm document must contain:
 
-1. Question — what we're exploring
-2. Constraints — what limits our choices
-3. Research findings — from live dual-angle research
-4. Approaches considered — at least 3, with pros/cons
-5. Rejections with reasons — what we ruled out and why
-6. Decision — what we chose and the evidence behind it
-7. Open questions — what we still don't know
-8. Next steps — concrete actions
-9. Sources — every URL cited
+1. Question - what we're exploring
+2. Constraints - what limits our choices
+3. Research findings - from live dual-angle research
+4. Approaches considered - at least 3, with pros/cons
+5. Rejections with reasons - what we ruled out and why
+6. Decision - what we chose and the evidence behind it
+7. Open questions - what we still don't know
+8. Next steps - concrete actions
+9. Sources - every URL cited
+10. Official vs caveats - what is documented behavior and what is only a caveat
 
 ## Red flags
 
-- Agreeing with every user statement without pushing back — you're not being a co-founder
-- Proposing only one approach — the brainstorm was too narrow
-- Saying "that's a great idea" without researching if it actually is — flattery is not analysis
-- Skipping the research phase — opinions without evidence
-- Not creating the output file — the brainstorm is lost
+- Agreeing with every user statement without pushing back - you are not being a co-founder
+- Proposing only one approach - the brainstorm was too narrow
+- Saying "that's a great idea" without researching if it actually is - flattery is not analysis
+- Skipping the research phase - opinions without evidence
+- Not creating the output file - the brainstorm is lost
+- Merging official behavior and forum caveats into one undifferentiated summary
+- Claiming the docs were fully read after only partial coverage
 
 ## How to improve the instruction
 
-No challenge → add: "For every idea proposed, ask 'why?' and 'what if we did the opposite?' before accepting"
+No challenge -> add: "For every idea proposed, ask 'why?' and 'what if we did the opposite?' before accepting"
 
-Single approach → add: "Generate at least 3 distinct approaches before evaluating any of them"
+Single approach -> add: "Generate at least 3 distinct approaches before evaluating any of them"
 
-No research → add: "Before discussing approaches, launch research agents to gather live data on each option"
+No research -> add: "Before discussing approaches, launch research agents to gather live data on each option"
 
-No documentation → add: "Save the complete brainstorm to .whytcard/projects/{id}/brainstorms/{subject}-{date}-{time}.md with all sections: question, constraints, findings, approaches, rejections, decision, open questions, next steps, sources"
+No documentation -> add: "Save the complete brainstorm to .whytcard/projects/{id}/brainstorms/{subject}-{date}-{time}.md with all sections: question, constraints, findings, approaches, rejections, decision, open questions, next steps, sources"
 
-Shallow discussion → add: "For each approach, stress-test: what breaks at 10x scale? what are the top 3 edge cases? what's the migration cost if we change our mind later?"
+Shallow discussion -> add: "For each approach, stress-test: what breaks at 10x scale? what are the top 3 edge cases? what's the migration cost if we change our mind later?"
+
+No official/caveat separation -> add: "Split the findings into 'official docs' and 'community caveats'. Use caveats only as caveats."
+
+False claim of full reading -> add: "List the requested corpus and mark each item as read or unread before you summarize it."

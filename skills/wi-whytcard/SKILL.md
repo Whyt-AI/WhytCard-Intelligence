@@ -5,14 +5,18 @@ description: Run the full WhytCard Intelligence workflow in one command. Initial
 
 # WhytCard (All-in-one)
 
-This skill is the **single entry point** that chains the core skills **in order** so the user can run one command instead of many.
+Mode: `autopilot-full`
 
-## Non‑negotiables
+This is the single entry point that chains the core skills in order so the user can run one command instead of many.
+
+## Non-negotiables
 
 - Do **not** ask the user questions by default.
 - Proceed with explicit assumptions when something is unclear; record them in the brainstorm document.
-- Only ask if blocked by missing credentials/prerequisites or an irreversible product decision.
-- Do not use bypasses that hide problems (no “ignore/noCheck/passWithNoTests” style shortcuts).
+- Ask at most one question, and only if blocked by missing credentials/prerequisites, an irreversible decision, or a critical ambiguity that would invalidate the work.
+- Do not use bypasses that hide problems (no "ignore/noCheck/passWithNoTests" style shortcuts).
+- Do not block on approval for reversible optimizations; escalate only irreversible or destructive decisions.
+- If exhaustive reading was requested, list the requested corpus and do not claim full understanding until all requested items were read.
 
 ## Default scope guard (important)
 
@@ -25,12 +29,13 @@ Focus on making the project **build + run + lint + type-check + test** cleanly w
 
 - Follow the same behavior as `wi-init-project` (idempotent).
 - Confirm `.whytcard/projects/{id}/00_orchestrator/` and `01_foundation/steps/` exist.
+- Treat `.whytcard/projects/{id}/pipeline/steps/` as the canonical execution location.
 
 ### 1) Brainstorm (with research)
 
 - Follow the same workflow as `wi-brainstorm`, but in **autopilot**:
   - Do not pause to ask the user to approve research axes.
-  - Choose 2–4 axes yourself, run research, and converge.
+  - Choose 2-4 axes yourself, run research, and converge.
 - Output:
   - `.whytcard/projects/{id}/brainstorms/...`
   - `.whytcard/projects/{id}/plans/...` with a step-by-step micro-action pipeline.
@@ -38,10 +43,12 @@ Focus on making the project **build + run + lint + type-check + test** cleanly w
 ### 2) Improve project (create + execute pipeline)
 
 - Follow the same workflow as `wi-improve-project`, but in **autopilot**:
-  - Do not pause for “approval”; treat the prioritized list as approved by default unless it triggers a stop condition.
+  - Do not pause for approval on reversible improvements; treat them as approved by default.
+  - Escalate only irreversible or destructive changes, or when a single critical ambiguity blocks safe execution.
 - Create steps under:
-  - `.whytcard/projects/{id}/02_improvements/steps/`
-- Execute each step with evidence captured in each step’s `evidence/` folder.
+  - `.whytcard/projects/{id}/pipeline/steps/`
+- Execute each step with evidence captured in each step's `evidence/` folder.
+- Save repo-level verification proof under `.whytcard/projects/{id}/proofs/`.
 
 ### 3) Final review (quality gate)
 
@@ -53,7 +60,7 @@ Focus on making the project **build + run + lint + type-check + test** cleanly w
 
 - A per-project KB exists: `.whytcard/projects/{id}/...`
 - A plan exists and is actionable: `.whytcard/projects/{id}/plans/...`
-- An improvements pipeline exists with at least one step when issues are found: `.whytcard/projects/{id}/02_improvements/steps/`
+- An execution pipeline exists with at least one step when issues are found: `.whytcard/projects/{id}/pipeline/steps/`
 - A final review exists: `.whytcard/projects/{id}/reviews/codebase-review-{date}.md`
-- No “hidden passes”: tests and checks are real and produce trustworthy evidence.
+- No "hidden passes": tests and checks are real and produce trustworthy evidence.
 

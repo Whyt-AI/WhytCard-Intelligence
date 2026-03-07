@@ -1,6 +1,25 @@
 ---
-description: "Interactive brainstorm (with research) — uses the wi-brainstorm skill."
+description: "Interactive brainstorm with research. Uses wi-brainstorm."
 disable-model-invocation: true
 ---
 
-Invoke the `wi-brainstorm` skill and follow it exactly.
+# /wi-brainstorm
+
+Mode: `interactive`
+
+Use when the user wants to explore options before committing to implementation.
+
+Invoke `wi-brainstorm` and follow it exactly.
+
+Return:
+
+- research artifacts in `.whytcard/projects/{id}/research/`
+- a brainstorm record in `.whytcard/projects/{id}/brainstorms/`
+- an implementation plan in `.whytcard/projects/{id}/plans/`
+
+Non-negotiables:
+
+- research first
+- compare at least 3 approaches unless the user narrows scope
+- separate official behavior from community caveats
+- do not claim exhaustive understanding after partial reading

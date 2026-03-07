@@ -3,46 +3,59 @@
  * wi-pre-edit-gate — PreToolUse hook for Edit/Write/NotebookEdit
  *
  * Two roles:
- * 1. Remind the orchestrator to DELEGATE if it tries to edit application code
+ * 1. Deny direct application-code edits by the orchestrator
  * 2. Inject quality reminders (visual, version, research) for legitimate edits
  *
- * Does NOT block tool execution — injects context reminders.
+ * Blocks forbidden edits and injects context reminders for allowed ones.
  * Works on both Claude Code and Cursor via shared output module.
  */
 
-const { handleStdin, injectContext, emptyResponse, isVisualFile, loadConfig } = require("./lib/output");
+const {
+  handleStdin,
+  injectContext,
+  emptyResponse,
+  denyAction,
+  isVisualFile,
+  loadConfig,
+} = require("./lib/output");
 
-// Paths that are orchestration work (allowed for the orchestrator to edit directly)
 const ORCHESTRATION_PATTERNS = [
-  /\.whytcard[/\\]/i,
-  /\.cursor[/\\]/i,
-  /\.claude[/\\]/i,
-  /pipeline[/\\]/i,
+  /(?:^|[/\\])hooks[/\\]/i,
+  /(?:^|[/\\])rules[/\\]/i,
+  /(?:^|[/\\])commands[/\\]/i,
+  /(?:^|[/\\])skills[/\\]/i,
+  /(?:^|[/\\])scripts[/\\]/i,
+  /(?:^|[/\\])\.whytcard[/\\]/i,
+  /(?:^|[/\\])\.cursor[/\\]/i,
+  /(?:^|[/\\])\.claude[/\\]/i,
+  /(?:^|[/\\])pipeline[/\\]/i,
   /wi-config\.json$/i,
+  /package\.json$/i,
   /\.mdc$/i,
   /\.md$/i,
   /plugin\.json$/i,
+  /hooks\.(?:cursor|claude)\.json$/i,
   /hooks\.json$/i,
+  /manifest\.(?:json|ya?ml)$/i,
   /CLAUDE\.md$/i,
   /AGENTS\.md$/i,
 ];
 
-// Paths that are application code (should be delegated to agents)
 const APPLICATION_PATTERNS = [
-  /[/\\]src[/\\]/i,
-  /[/\\]app[/\\]/i,
-  /[/\\]apps[/\\]/i,
-  /[/\\]packages[/\\]/i,
-  /[/\\]components[/\\]/i,
-  /[/\\]lib[/\\]/i,
-  /[/\\]services[/\\]/i,
-  /[/\\]utils[/\\]/i,
-  /[/\\]pages[/\\]/i,
-  /[/\\]routes[/\\]/i,
-  /[/\\]api[/\\]/i,
-  /[/\\]server[/\\]/i,
-  /[/\\]tests?[/\\]/i,
-  /[/\\]__tests__[/\\]/i,
+  /(?:^|[/\\])src[/\\]/i,
+  /(?:^|[/\\])app[/\\]/i,
+  /(?:^|[/\\])apps[/\\]/i,
+  /(?:^|[/\\])packages[/\\]/i,
+  /(?:^|[/\\])components[/\\]/i,
+  /(?:^|[/\\])lib[/\\]/i,
+  /(?:^|[/\\])services[/\\]/i,
+  /(?:^|[/\\])utils[/\\]/i,
+  /(?:^|[/\\])pages[/\\]/i,
+  /(?:^|[/\\])routes[/\\]/i,
+  /(?:^|[/\\])api[/\\]/i,
+  /(?:^|[/\\])server[/\\]/i,
+  /(?:^|[/\\])tests?[/\\]/i,
+  /(?:^|[/\\])__tests__[/\\]/i,
   /\.tsx$/i,
   /\.jsx$/i,
   /\.vue$/i,
@@ -51,6 +64,16 @@ const APPLICATION_PATTERNS = [
   /\.py$/i,
   /\.go$/i,
 ];
+
+function getFilePath(toolInput) {
+  return (
+    toolInput.file_path ||
+    toolInput.path ||
+    toolInput.target_file ||
+    toolInput.target_notebook ||
+    ""
+  );
+}
 
 function isOrchestrationFile(filePath) {
   return ORCHESTRATION_PATTERNS.some((p) => p.test(filePath));
@@ -64,20 +87,19 @@ function isApplicationCode(filePath) {
 handleStdin((data) => {
   const toolName = data.tool_name || "";
   const toolInput = data.tool_input || {};
-  const filePath = toolInput.file_path || "";
+  const filePath = getFilePath(toolInput);
   const filePathLower = filePath.toLowerCase();
   const cwd = data.cwd || process.cwd();
   const config = loadConfig(cwd);
   const reminders = [];
 
-  // ── Orchestrator delegation reminder ──
   if (isApplicationCode(filePath)) {
-    reminders.push(
-      `WC-ORCHESTRATOR: You are editing application code (${filePath}). As the orchestrator, you delegate code work to subagents. Create an agent with the relevant skill and delegate this task. Only edit .whytcard/, config files, and pipeline artifacts directly.`
+    return denyAction(
+      "PreToolUse",
+      `WC-DENY: Direct edit blocked for application code (${filePath}). As the orchestrator, delegate code changes to a subagent. Direct edits are reserved for orchestration/plugin files such as hooks/, rules/, commands/, skills/, scripts/, plugin manifests, .whytcard/, markdown, and .mdc.`
     );
   }
 
-  // ── Visual file → remind to evaluate with visual-verify grid ──
   if (config.visualVerification && isVisualFile(filePathLower)) {
     const vp = config.viewports || [375, 768, 1440];
     reminders.push(
@@ -85,7 +107,6 @@ handleStdin((data) => {
     );
   }
 
-  // ── package.json → remind to evaluate with version-check grid ──
   if (config.versionCheck && filePathLower.endsWith("package.json")) {
     const editContent = toolInput.new_string || toolInput.content || toolInput.insert || "";
     const isDependencyEdit =
@@ -102,10 +123,15 @@ handleStdin((data) => {
     }
   }
 
-  // ── New file creation → remind research-first evaluation ──
   if (config.researchFirst && toolName === "Write" && !isOrchestrationFile(filePathLower)) {
     reminders.push(
       "WC-RESEARCH: New file creation. Evaluate with rules/research-first.mdc: was the approach researched? dual-angle? alternatives considered?"
+    );
+  }
+
+  if (isOrchestrationFile(filePathLower)) {
+    reminders.push(
+      "WC-QUALITY: Allowed direct edit. Keep the orchestrator contract intact: preserve delegation rules, keep instructions executable, and require concrete evidence paths and gate commands."
     );
   }
 

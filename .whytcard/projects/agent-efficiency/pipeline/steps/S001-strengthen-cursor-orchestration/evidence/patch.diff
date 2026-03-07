@@ -1,0 +1,740 @@
+commit b5f2de010acceb9d70a2bd3ee5a72f872c2c4eeb
+Author:     Cursor Agent <cursoragent@cursor.com>
+AuthorDate: Fri Mar 6 20:30:17 2026 +0000
+Commit:     Cursor Agent <cursoragent@cursor.com>
+CommitDate: Fri Mar 6 20:30:17 2026 +0000
+
+    Strengthen orchestration dispatch and gates
+    
+    Co-authored-by: Whyt-AI <Whyt-AI@users.noreply.github.com>
+---
+ commands/wi-brainstorm.md          |   8 +-
+ commands/wi-search-web.md          |   9 +-
+ hooks/hooks.claude.json            |   2 +-
+ hooks/hooks.cursor.json            |   2 +-
+ hooks/wi-pre-edit-gate.js          |  86 ++++++++-----
+ hooks/wi-prompt-dispatch.js        | 239 ++++++++++++++++++++++++++-----------
+ skills/wi-brainstorm/SKILL.md      |  51 +++++++-
+ skills/wi-improve-project/SKILL.md |   8 +-
+ skills/wi-search-web/SKILL.md      |  51 +++++++-
+ skills/wi-whytcard/SKILL.md        |   6 +-
+ 10 files changed, 348 insertions(+), 114 deletions(-)
+
+diff --git a/commands/wi-brainstorm.md b/commands/wi-brainstorm.md
+index 06eb490..9b1ede8 100644
+--- a/commands/wi-brainstorm.md
++++ b/commands/wi-brainstorm.md
+@@ -3,4 +3,10 @@ description: "Interactive brainstorm (with research) — uses the wi-brainstorm
+ disable-model-invocation: true
+ ---
+ 
+-Invoke the `wi-brainstorm` skill and follow it exactly.
++Invoke the `wi-brainstorm` skill and enforce its hard contract:
++
++- Research first, then compare at least 3 approaches before any decision.
++- Save research artifacts in `.whytcard/projects/{id}/research/`.
++- Stress-test each approach for scale, edge cases, migration cost, rollback risk, and maintenance burden.
++- Return `Rejections`, `Open questions`, and `Sources`.
++- Produce the brainstorm doc and implementation plan in the project KB.
+diff --git a/commands/wi-search-web.md b/commands/wi-search-web.md
+index 2f9a17f..dc8beea 100644
+--- a/commands/wi-search-web.md
++++ b/commands/wi-search-web.md
+@@ -3,4 +3,11 @@ description: "Web research (good/bad angle + data) — uses the wi-search-web sk
+ disable-model-invocation: true
+ ---
+ 
+-Invoke the `wi-search-web` skill and follow it exactly.
++Invoke the `wi-search-web` skill and enforce its hard contract:
++
++- Run at least 3 distinct queries: good angle, bad/community angle, data angle.
++- Do not recommend anything without 1 official source, 1 bad/community source, 1 data source, and 3+ distinct sources total.
++- Return explicit `Confidence: HIGH|MEDIUM|LOW`.
++- Return explicit `Unknowns`.
++- Return a final `Sources` list.
++- If in project context, save the research in `.whytcard/projects/{id}/research/`.
+diff --git a/hooks/hooks.claude.json b/hooks/hooks.claude.json
+index 67e868f..db55748 100644
+--- a/hooks/hooks.claude.json
++++ b/hooks/hooks.claude.json
+@@ -55,7 +55,7 @@
+         "hooks": [
+           {
+             "type": "prompt",
+-            "prompt": "IMPORTANT: If stop_hook_active is true in the input, return 'allow' immediately to prevent infinite loops.\n\nBefore stopping, verify the orchestrator protocol was followed:\n\n1. DELEGATION: Did you delegate code work to agents, or did you write application code directly? If you wrote code outside .whytcard/ or config files, return 'deny' — the orchestrator must delegate.\n2. VISUAL: If agents modified visual files (.tsx, .jsx, .vue, .svelte, .css, .scss, .html, .astro), were screenshots verified at 3 viewports (375/768/1440px)? If not, return 'deny'.\n3. VERSIONS: If agents installed or updated packages, were versions verified via live search (not memory)? If not, return 'deny'.\n4. RESEARCH: If a technology recommendation was made, was dual-angle research done (good + bad + data)? If not, return 'deny'.\n5. EVIDENCE: Were agent results backed by evidence (gate logs, screenshots, test results)? Claims without proof = return 'deny'.\n6. PIPELINE: If in a pipeline, was the step evidence saved to .whytcard/? If not, return 'deny'.\n\nIf all checks pass or no code/UI work was done, return 'allow'.",
++            "prompt": "IMPORTANT: If stop_hook_active is true in the input, return 'allow' immediately to prevent infinite loops.\n\nBefore stopping, verify the orchestrator protocol was followed with concrete named proof, not vague claims.\n\n1. DELEGATION: Name the subagents launched and the skill/step each handled. If application-code work happened without named subagents, return 'deny'.\n2. EVIDENCE_PATHS: Name the concrete evidence paths that back the work (for example `.whytcard/.../evidence/...`, logs, saved artifacts). If you cannot cite paths, return 'deny'.\n3. GATE_COMMANDS: Name the exact commands run for the relevant gates (lint, type-check, test, build, targeted validation). If the commands or outcomes are missing, return 'deny'.\n4. UI_PROOF: If visual files changed, name the screenshot/video paths and confirm viewport coverage. If missing, return 'deny'.\n5. RESEARCH_AND_VERSIONS: If recommendations or dependency updates were made, name the official source, bad/community source, data source, and any live version checks used. If missing, return 'deny'.\n6. PIPELINE: If this was part of a pipeline, confirm evidence was written under `.whytcard/projects/...`. If not, return 'deny'.\n\nIf every relevant check has concrete named proof, return 'allow'. Otherwise return 'deny'. Keep the answer minimal.",
+             "timeout": 30
+           }
+         ]
+diff --git a/hooks/hooks.cursor.json b/hooks/hooks.cursor.json
+index a44c1fe..8906ce0 100644
+--- a/hooks/hooks.cursor.json
++++ b/hooks/hooks.cursor.json
+@@ -55,7 +55,7 @@
+         "hooks": [
+           {
+             "type": "prompt",
+-            "prompt": "IMPORTANT: If stop_hook_active is true in the input, return 'allow' immediately to prevent infinite loops.\n\nBefore stopping, verify the orchestrator protocol was followed:\n\n1. DELEGATION: Did you delegate code work to agents, or did you write application code directly? If you wrote code outside .whytcard/ or config files, return 'deny' — the orchestrator must delegate.\n2. VISUAL: If agents modified visual files (.tsx, .jsx, .vue, .svelte, .css, .scss, .html, .astro), were screenshots verified at 3 viewports (375/768/1440px)? If not, return 'deny'.\n3. VERSIONS: If agents installed or updated packages, were versions verified via live search (not memory)? If not, return 'deny'.\n4. RESEARCH: If a technology recommendation was made, was dual-angle research done (good + bad + data)? If not, return 'deny'.\n5. EVIDENCE: Were agent results backed by evidence (gate logs, screenshots, test results)? Claims without proof = return 'deny'.\n6. PIPELINE: If in a pipeline, was the step evidence saved to .whytcard/? If not, return 'deny'.\n\nIf all checks pass or no code/UI work was done, return 'allow'.",
++            "prompt": "IMPORTANT: If stop_hook_active is true in the input, return 'allow' immediately to prevent infinite loops.\n\nBefore stopping, verify the orchestrator protocol was followed with concrete named proof, not vague claims.\n\n1. DELEGATION: Name the subagents launched and the skill/step each handled. If application-code work happened without named subagents, return 'deny'.\n2. EVIDENCE_PATHS: Name the concrete evidence paths that back the work (for example `.whytcard/.../evidence/...`, logs, saved artifacts). If you cannot cite paths, return 'deny'.\n3. GATE_COMMANDS: Name the exact commands run for the relevant gates (lint, type-check, test, build, targeted validation). If the commands or outcomes are missing, return 'deny'.\n4. UI_PROOF: If visual files changed, name the screenshot/video paths and confirm viewport coverage. If missing, return 'deny'.\n5. RESEARCH_AND_VERSIONS: If recommendations or dependency updates were made, name the official source, bad/community source, data source, and any live version checks used. If missing, return 'deny'.\n6. PIPELINE: If this was part of a pipeline, confirm evidence was written under `.whytcard/projects/...`. If not, return 'deny'.\n\nIf every relevant check has concrete named proof, return 'allow'. Otherwise return 'deny'. Keep the answer minimal.",
+             "timeout": 30
+           }
+         ]
+diff --git a/hooks/wi-pre-edit-gate.js b/hooks/wi-pre-edit-gate.js
+index 482013b..b42961b 100644
+--- a/hooks/wi-pre-edit-gate.js
++++ b/hooks/wi-pre-edit-gate.js
+@@ -3,46 +3,59 @@
+  * wi-pre-edit-gate — PreToolUse hook for Edit/Write/NotebookEdit
+  *
+  * Two roles:
+- * 1. Remind the orchestrator to DELEGATE if it tries to edit application code
++ * 1. Deny direct application-code edits by the orchestrator
+  * 2. Inject quality reminders (visual, version, research) for legitimate edits
+  *
+- * Does NOT block tool execution — injects context reminders.
++ * Blocks forbidden edits and injects context reminders for allowed ones.
+  * Works on both Claude Code and Cursor via shared output module.
+  */
+ 
+-const { handleStdin, injectContext, emptyResponse, isVisualFile, loadConfig } = require("./lib/output");
++const {
++  handleStdin,
++  injectContext,
++  emptyResponse,
++  denyAction,
++  isVisualFile,
++  loadConfig,
++} = require("./lib/output");
+ 
+-// Paths that are orchestration work (allowed for the orchestrator to edit directly)
+ const ORCHESTRATION_PATTERNS = [
+-  /\.whytcard[/\\]/i,
+-  /\.cursor[/\\]/i,
+-  /\.claude[/\\]/i,
+-  /pipeline[/\\]/i,
++  /(?:^|[/\\])hooks[/\\]/i,
++  /(?:^|[/\\])rules[/\\]/i,
++  /(?:^|[/\\])commands[/\\]/i,
++  /(?:^|[/\\])skills[/\\]/i,
++  /(?:^|[/\\])scripts[/\\]/i,
++  /(?:^|[/\\])\.whytcard[/\\]/i,
++  /(?:^|[/\\])\.cursor[/\\]/i,
++  /(?:^|[/\\])\.claude[/\\]/i,
++  /(?:^|[/\\])pipeline[/\\]/i,
+   /wi-config\.json$/i,
++  /package\.json$/i,
+   /\.mdc$/i,
+   /\.md$/i,
+   /plugin\.json$/i,
++  /hooks\.(?:cursor|claude)\.json$/i,
+   /hooks\.json$/i,
++  /manifest\.(?:json|ya?ml)$/i,
+   /CLAUDE\.md$/i,
+   /AGENTS\.md$/i,
+ ];
+ 
+-// Paths that are application code (should be delegated to agents)
+ const APPLICATION_PATTERNS = [
+-  /[/\\]src[/\\]/i,
+-  /[/\\]app[/\\]/i,
+-  /[/\\]apps[/\\]/i,
+-  /[/\\]packages[/\\]/i,
+-  /[/\\]components[/\\]/i,
+-  /[/\\]lib[/\\]/i,
+-  /[/\\]services[/\\]/i,
+-  /[/\\]utils[/\\]/i,
+-  /[/\\]pages[/\\]/i,
+-  /[/\\]routes[/\\]/i,
+-  /[/\\]api[/\\]/i,
+-  /[/\\]server[/\\]/i,
+-  /[/\\]tests?[/\\]/i,
+-  /[/\\]__tests__[/\\]/i,
++  /(?:^|[/\\])src[/\\]/i,
++  /(?:^|[/\\])app[/\\]/i,
++  /(?:^|[/\\])apps[/\\]/i,
++  /(?:^|[/\\])packages[/\\]/i,
++  /(?:^|[/\\])components[/\\]/i,
++  /(?:^|[/\\])lib[/\\]/i,
++  /(?:^|[/\\])services[/\\]/i,
++  /(?:^|[/\\])utils[/\\]/i,
++  /(?:^|[/\\])pages[/\\]/i,
++  /(?:^|[/\\])routes[/\\]/i,
++  /(?:^|[/\\])api[/\\]/i,
++  /(?:^|[/\\])server[/\\]/i,
++  /(?:^|[/\\])tests?[/\\]/i,
++  /(?:^|[/\\])__tests__[/\\]/i,
+   /\.tsx$/i,
+   /\.jsx$/i,
+   /\.vue$/i,
+@@ -52,6 +65,16 @@ const APPLICATION_PATTERNS = [
+   /\.go$/i,
+ ];
+ 
++function getFilePath(toolInput) {
++  return (
++    toolInput.file_path ||
++    toolInput.path ||
++    toolInput.target_file ||
++    toolInput.target_notebook ||
++    ""
++  );
++}
++
+ function isOrchestrationFile(filePath) {
+   return ORCHESTRATION_PATTERNS.some((p) => p.test(filePath));
+ }
+@@ -64,20 +87,19 @@ function isApplicationCode(filePath) {
+ handleStdin((data) => {
+   const toolName = data.tool_name || "";
+   const toolInput = data.tool_input || {};
+-  const filePath = toolInput.file_path || "";
++  const filePath = getFilePath(toolInput);
+   const filePathLower = filePath.toLowerCase();
+   const cwd = data.cwd || process.cwd();
+   const config = loadConfig(cwd);
+   const reminders = [];
+ 
+-  // ── Orchestrator delegation reminder ──
+   if (isApplicationCode(filePath)) {
+-    reminders.push(
+-      `WC-ORCHESTRATOR: You are editing application code (${filePath}). As the orchestrator, you delegate code work to subagents. Create an agent with the relevant skill and delegate this task. Only edit .whytcard/, config files, and pipeline artifacts directly.`
++    return denyAction(
++      "PreToolUse",
++      `WC-DENY: Direct edit blocked for application code (${filePath}). As the orchestrator, delegate code changes to a subagent. Direct edits are reserved for orchestration/plugin files such as hooks/, rules/, commands/, skills/, scripts/, plugin manifests, .whytcard/, markdown, and .mdc.`
+     );
+   }
+ 
+-  // ── Visual file → remind to evaluate with visual-verify grid ──
+   if (config.visualVerification && isVisualFile(filePathLower)) {
+     const vp = config.viewports || [375, 768, 1440];
+     reminders.push(
+@@ -85,7 +107,6 @@ handleStdin((data) => {
+     );
+   }
+ 
+-  // ── package.json → remind to evaluate with version-check grid ──
+   if (config.versionCheck && filePathLower.endsWith("package.json")) {
+     const editContent = toolInput.new_string || toolInput.content || toolInput.insert || "";
+     const isDependencyEdit =
+@@ -102,13 +123,18 @@ handleStdin((data) => {
+     }
+   }
+ 
+-  // ── New file creation → remind research-first evaluation ──
+   if (config.researchFirst && toolName === "Write" && !isOrchestrationFile(filePathLower)) {
+     reminders.push(
+       "WC-RESEARCH: New file creation. Evaluate with rules/research-first.mdc: was the approach researched? dual-angle? alternatives considered?"
+     );
+   }
+ 
++  if (isOrchestrationFile(filePathLower)) {
++    reminders.push(
++      "WC-QUALITY: Allowed direct edit. Keep the orchestrator contract intact: preserve delegation rules, keep instructions executable, and require concrete evidence paths and gate commands."
++    );
++  }
++
+   if (reminders.length > 0) {
+     return injectContext("PreToolUse", reminders.join("\n"));
+   }
+diff --git a/hooks/wi-prompt-dispatch.js b/hooks/wi-prompt-dispatch.js
+index 6d45a42..b1ed30b 100644
+--- a/hooks/wi-prompt-dispatch.js
++++ b/hooks/wi-prompt-dispatch.js
+@@ -9,78 +9,183 @@
+ 
+ const { handleStdin, injectContext, emptyResponse } = require("./lib/output");
+ 
+-// Keyword → dispatch hint mapping
+-// Each hint tells the orchestrator which skill to reference when creating agents
+-const DISPATCH_RULES = [
+-  // ── Brainstorm (interactive) ──
+-  [/\b(brainstorm\w*|ideate?\b|explor\w+\s+(?:idea|option|approach|solution)|think\s+through|weigh\s+(?:option|approach)|let'?s\s+think|on\s+(?:r[eé]fl[eé]chit?|pense)|what\s+(?:if|about)|should\s+(?:we|i)\s+(?:use|go\s+with|pick|choose))\b/i,
+-    "WI-DISPATCH: Brainstorm detected → use skills/wi-brainstorm/SKILL.md. Launch research agents in parallel, discuss with user, challenge assumptions, converge on approach."],
+-
+-  // ── New project (autopilot) ──
+-  [/\b(new\s+project|from\s+scratch|scaffold|bootstrap|create\s+(?:a|an|the)\s+(?:app|tool|system|project|site)|init\w*\s+project|projet\s+complet|je\s+veux\s+un\s+(?:outil|projet|site))\b/i,
+-    "WI-DISPATCH: New project detected → use skills/wi-new-project/SKILL.md. Gather requirements, research stack, create pipeline, execute step by step."],
+-
+-  // ── Improve project (autopilot) ──
+-  [/\b(improve|audit|refactor|clean\s*up|tech\s*debt|modernize|upgrade|optimize\s+(?:the\s+)?(?:code|project|app))\b/i,
+-    "WI-DISPATCH: Improve project detected → use skills/wi-improve-project/SKILL.md. Audit codebase, prioritize issues, create fix pipeline."],
+-
+-  // ── Fix bug (autopilot) ──
+-  [/\b(bug|error|broken|failing|crash|fix|debug|doesn'?t\s+work|ne\s+(?:marche|fonctionne)\s+p(?:as|lus))\b/i,
+-    "WI-DISPATCH: Bug fix detected → use skills/wi-fix-bug/SKILL.md. Reproduce, isolate, diagnose root cause, fix, verify no regression."],
+-
+-  // ── Add feature (autopilot) ──
+-  [/\b(add\s+(?:a\s+)?feature|new\s+feature|implement|ajoute\w*|cr[eé]e\w*\s+(?:un|une|le|la)|build\s+(?:a|the))\b/i,
+-    "WI-DISPATCH: Feature addition detected → use skills/wi-add-feature/SKILL.md. Analyze impact, decompose, create pipeline, execute with gates."],
+-
+-  // ── Web research (utility) ──
+-  [/\b(research|compare|evaluate|which|best|alternative|recommend|pros.?cons|trade.?off|cherch\w+|renseign\w+)\b/i,
+-    "WI-DISPATCH: Research detected → use skills/wi-search-web/SKILL.md for deep research or skills/wi-research-stack/SKILL.md for tech comparison. Dual-angle: good + bad + data."],
+-
+-  // ── Visual check (utility) ──
+-  [/\b(check\s+(?:the\s+)?(?:browser|ui|visual|page|site|localhost)|screenshot|viewport|responsive|v[eé]rif\w+\s+(?:le\s+)?(?:visuel|rendu))\b/i,
+-    "WI-DISPATCH: Visual check detected → use skills/wi-check-browser/SKILL.md. Navigate, screenshot 3 viewports, dark+light, evaluate as user."],
+-
+-  // ── Codebase review (utility) ──
+-  [/\b(review|code\s*review|audit\s+(?:the\s+)?code|quality\s+check|pr\s+review)\b/i,
+-    "WI-DISPATCH: Code review detected → use skills/wi-review-codebase/SKILL.md. 6 dimensions: quality, types, security, perf, deps, tests."],
+-
+-  // ── Security audit (utility) ──
+-  [/\b(security|vulnerabilit\w+|cve|owasp|injection|xss|csrf|s[eé]curit[eé])\b/i,
+-    "WI-DISPATCH: Security audit detected → use skills/wi-security-audit/SKILL.md. Scan deps, code patterns, secrets, config, OWASP Top 10."],
+-
+-  // ── Performance audit (utility) ──
+-  [/\b(perf(?:ormance)?|slow|fast|speed|bundle\s*size|render|bottleneck|latenc\w+|lent|rapide)\b/i,
+-    "WI-DISPATCH: Performance audit detected → use skills/wi-perf-audit/SKILL.md. Bundle, render, server, network analysis. Top 5 bottlenecks."],
+-
+-  // ── Stack research (utility) ──
+-  [/\b(stack|framework|library|package|which\s+(?:lib|framework|tool)|compar\w+\s+(?:lib|framework|package))\b/i,
+-    "WI-DISPATCH: Stack research detected → use skills/wi-research-stack/SKILL.md. Research each option, comparison table, dual-angle, recommend."],
+-
+-  // ── Dependency management ──
+-  [/\b(install|add\s+(?:package|dependency)|npm|pnpm|bun|pip|cargo\s+add)\b/i,
+-    "WI-DISPATCH: Package task detected → verify latest versions via live search. Evaluate with rules/version-check.mdc."],
+-
+-  // ── UI work ──
+-  [/\b(ui|component|page|visual|design|layout|style|theme)\b/i,
+-    "WI-DISPATCH: UI task detected → after agents complete, evaluate with rules/visual-verify.mdc. Screenshots mandatory."],
+-
+-  // ── Deploy ──
+-  [/\b(deploy|ship|production|release|publish)\b/i,
+-    "WI-DISPATCH: Deploy detected → run review (skills/wi-review-codebase/SKILL.md) before shipping. Verify build, no errors, env vars set."],
++const PRIMARY_RULES = [
++  {
++    id: "brainstorm",
++    priority: 110,
++    pattern: /\b(brainstorm\w*|ideate?\b|explor\w+\s+(?:idea|option|approach|solution)|think\s+through|weigh\s+(?:option|approach)|let'?s\s+think|on\s+(?:r[eé]fl[eé]chit?|pense)|what\s+(?:if|about)|should\s+(?:we|i)\s+(?:use|go\s+with|pick|choose))\b/i,
++    skill: "skills/wi-brainstorm/SKILL.md",
++    directive: "Run the interactive brainstorm workflow. Launch research subagents, compare multiple approaches, challenge assumptions, and converge with the user.",
++  },
++  {
++    id: "new_project",
++    priority: 100,
++    pattern: /\b(new\s+project|from\s+scratch|scaffold|bootstrap|create\s+(?:a|an|the)\s+(?:app|tool|system|project|site)|init\w*\s+project|projet\s+complet|je\s+veux\s+un\s+(?:outil|projet|site))\b/i,
++    skill: "skills/wi-new-project/SKILL.md",
++    directive: "Run the new-project workflow. Gather requirements, research the stack, scaffold the pipeline, and execute step by step.",
++  },
++  {
++    id: "fix_bug",
++    priority: 95,
++    pattern: /\b(bug|error|broken|failing|crash|fix|debug|doesn'?t\s+work|ne\s+(?:marche|fonctionne)\s+p(?:as|lus))\b/i,
++    skill: "skills/wi-fix-bug/SKILL.md",
++    directive: "Run the bug-fix workflow. Reproduce, isolate the root cause, fix it, and verify the regression path.",
++  },
++  {
++    id: "add_feature",
++    priority: 90,
++    pattern: /\b(add\s+(?:a\s+)?feature|new\s+feature|implement|ajoute\w*|cr[eé]e\w*\s+(?:un|une|le|la)|build\s+(?:a|the))\b/i,
++    skill: "skills/wi-add-feature/SKILL.md",
++    directive: "Run the feature workflow. Analyze impact, decompose into micro-actions, delegate implementation, and verify with evidence.",
++  },
++  {
++    id: "improve_project",
++    priority: 85,
++    pattern: /\b(improve|audit|refactor|clean\s*up|tech\s*debt|modernize|upgrade|optimize\s+(?:the\s+)?(?:code|project|app))\b/i,
++    skill: "skills/wi-improve-project/SKILL.md",
++    directive: "Run the project-improvement workflow. Audit the codebase, prioritize issues, create a fix pipeline, and execute with proofs.",
++  },
++  {
++    id: "security_audit",
++    priority: 80,
++    pattern: /\b(security|vulnerabilit\w+|cve|owasp|injection|xss|csrf|s[eé]curit[eé])\b/i,
++    skill: "skills/wi-security-audit/SKILL.md",
++    directive: "Run the security-audit workflow. Check dependencies, code paths, secrets, and config against concrete risks.",
++  },
++  {
++    id: "performance_audit",
++    priority: 75,
++    pattern: /\b(perf(?:ormance)?|slow|fast|speed|bundle\s*size|render|bottleneck|latenc\w+|lent|rapide)\b/i,
++    skill: "skills/wi-perf-audit/SKILL.md",
++    directive: "Run the performance-audit workflow. Measure bottlenecks, rank them, and propose fixes backed by data.",
++  },
++  {
++    id: "code_review",
++    priority: 70,
++    pattern: /\b(review|code\s*review|audit\s+(?:the\s+)?code|quality\s+check|pr\s+review)\b/i,
++    skill: "skills/wi-review-codebase/SKILL.md",
++    directive: "Run the codebase review workflow. Audit quality, types, security, performance, dependencies, and tests.",
++  },
++  {
++    id: "research_stack",
++    priority: 65,
++    pattern: /\b(stack|framework|library|librair\w+|biblioth[eè]que|package|outil|which\s+(?:lib|framework|tool)|compar\w+\s+(?:lib|framework|package|outil|biblioth[eè]que))\b/i,
++    skill: "skills/wi-research-stack/SKILL.md",
++    directive: "Run the stack-research workflow. Compare options with current data, risks, trade-offs, and a clear recommendation.",
++  },
++  {
++    id: "search_web",
++    priority: 60,
++    pattern: /\b(research|compare|evaluate|which|best|alternative|recommend|pros.?cons|trade.?off|recherch\w*|cherch\w+|renseign\w+|meilleur\w*)\b/i,
++    skill: "skills/wi-search-web/SKILL.md",
++    directive: "Run the web-research workflow. Gather official, bad/community, and data sources before recommending anything.",
++  },
++  {
++    id: "check_browser",
++    priority: 50,
++    pattern: /\b(check\s+(?:the\s+)?(?:browser|ui|visual|page|site|localhost)|screenshot|viewport|responsive|v[eé]rif\w+\s+(?:le\s+)?(?:visuel|rendu))\b/i,
++    skill: "skills/wi-check-browser/SKILL.md",
++    directive: "Run the visual-check workflow. Navigate, inspect the UI, and verify screenshots across required viewports and themes.",
++  },
+ ];
+ 
+-handleStdin((data) => {
+-  const prompt = data.prompt || "";
+-  const hints = [];
++const SECONDARY_RULES = [
++  {
++    id: "research_gate",
++    pattern: /\b(research|compare|evaluate|which|best|alternative|recommend|stack|framework|library|librair\w+|biblioth[eè]que|package|outil|pros.?cons|trade.?off|recherch\w*|cherch\w+|renseign\w+|meilleur\w*)\b/i,
++    directive: "Before any recommendation, require official source + bad/community source + data source, at least 3 distinct sources total, explicit confidence, and explicit unknowns.",
++  },
++  {
++    id: "version_gate",
++    pattern: /\b(install|add\s+(?:package|dependency)|dependency|dependencies|package\.json|npm|pnpm|bun|pip|cargo\s+add|upgrade)\b/i,
++    directive: "If dependencies are touched, verify latest versions and maintenance status via live research instead of memory.",
++  },
++  {
++    id: "visual_gate",
++    pattern: /\b(ui|component|page|visual|design|layout|style|theme|responsive|viewport|css|tsx|jsx|vue|svelte|html)\b/i,
++    directive: "If visual files change, require screenshots at 375/768/1440px and dark/light modes before claiming success.",
++  },
++  {
++    id: "execution_gate",
++    pattern: /\b(run|build|test|validate|verify|proof|evidence|deploy|ship|production|release|publish)\b/i,
++    directive: "Require concrete execution proof: exact gate commands, evidence paths, and screenshots when UI work is involved.",
++  },
++];
++
++function collectMatches(rules, prompt) {
++  return rules
++    .map((rule, index) => ({ ...rule, index, matched: rule.pattern.test(prompt) }))
++    .filter((rule) => rule.matched);
++}
++
++function selectPrimary(prompt) {
++  const matches = collectMatches(PRIMARY_RULES, prompt);
++  if (matches.length === 0) {
++    return null;
++  }
++
++  matches.sort((left, right) => {
++    if (right.priority !== left.priority) {
++      return right.priority - left.priority;
++    }
++    return left.index - right.index;
++  });
++
++  return {
++    selected: matches[0],
++    alternatives: matches.slice(1),
++  };
++}
++
++function buildContext(prompt) {
++  const primary = selectPrimary(prompt);
++  const secondary = collectMatches(SECONDARY_RULES, prompt);
++
++  if (!primary && secondary.length === 0) {
++    return "";
++  }
++
++  const lines = ["WI-DISPATCH: Structured routing active."];
+ 
+-  for (const [pattern, hint] of DISPATCH_RULES) {
+-    if (pattern.test(prompt)) {
+-      hints.push(hint);
++  if (primary) {
++    lines.push(`PRIMARY_MODE: ${primary.selected.id}`);
++    lines.push(`PRIMARY_SKILL: ${primary.selected.skill}`);
++    lines.push(`PRIMARY_DIRECTIVE: ${primary.selected.directive}`);
++    if (primary.alternatives.length > 0) {
++      lines.push(
++        `ALTERNATE_PRIMARY_MATCHES: ${primary.alternatives.map((rule) => rule.id).join(", ")}`
++      );
+     }
++  } else {
++    lines.push("PRIMARY_MODE: general_orchestration");
++    lines.push(
++      "PRIMARY_DIRECTIVE: No specific workflow matched strongly enough. Stay in orchestrator mode, clarify routing if needed, and do not jump into direct implementation."
++    );
+   }
+ 
+-  if (hints.length > 0) {
+-    return injectContext("UserPromptSubmit", hints.join("\n"));
++  lines.push(
++    "PRIMARY_NOTE: In the first response, commit to exactly one primary mode. Do not mix multiple primary workflows in the same opening reply; treat other matches as deferred context or gates."
++  );
++
++  if (secondary.length > 0) {
++    lines.push("SECONDARY_GATES:");
++    for (const rule of secondary) {
++      lines.push(`- ${rule.id}: ${rule.directive}`);
++    }
++  } else {
++    lines.push("SECONDARY_GATES: none");
+   }
+-  return emptyResponse();
++
++  return lines.join("\n");
++}
++
++handleStdin((data) => {
++  const prompt = data.prompt || "";
++  const context = buildContext(prompt);
++
++  if (!context) {
++    return emptyResponse();
++  }
++
++  return injectContext("UserPromptSubmit", context);
+ });
+diff --git a/skills/wi-brainstorm/SKILL.md b/skills/wi-brainstorm/SKILL.md
+index 234a36a..8e0c31d 100644
+--- a/skills/wi-brainstorm/SKILL.md
++++ b/skills/wi-brainstorm/SKILL.md
+@@ -23,16 +23,37 @@ For each axis, create and launch a research agent:
+ 
+ Launch them in parallel. Each runs in an isolated context. Your context stays clean.
+ 
+-### 3. Present and discuss
++Save each research result to `.whytcard/projects/{id}/research/{topic}-{axis}-{date}.md`.
++
++### 3. Build approaches
++
++Before any decision, define at least 3 distinct approaches.
++
++For each approach, capture:
++
++- What it is
++- Why it fits
++- Why it can fail
++- Dependencies/prerequisites
++- Migration cost
++
++Do not converge on a decision with fewer than 3 approaches unless the user explicitly narrows the scope.
++
++### 4. Stress-test and discuss
+ 
+ When agents return:
+ 
+ - Synthesize findings into a clear summary
+-- Present to the user with your analysis
++- Present at least 3 approaches to the user with your analysis
+ - Highlight trade-offs, risks, and recommendations
+ - Challenge weak assumptions — yours and the user's
++- Stress-test each approach on:
++  - Scale and growth
++  - Edge cases and failure modes
++  - Migration cost and rollback complexity
++  - Operational burden and maintenance cost
+ 
+-### 4. Iterate
++### 5. Iterate
+ 
+ The user may redirect:
+ 
+@@ -42,7 +63,7 @@ The user may redirect:
+ 
+ Keep going until you both converge.
+ 
+-### 5. Produce output
++### 6. Produce output
+ 
+ When the brainstorm converges:
+ 
+@@ -61,15 +82,33 @@ When the brainstorm converges:
+ ## Research findings
+ {Summarized agent findings with sources}
+ 
+-## Options considered
+-{Each option with pros/cons/data}
++## Approaches considered
++### Approach 1
++{Description, pros, cons, data, risks}
++
++### Approach 2
++{Description, pros, cons, data, risks}
++
++### Approach 3
++{Description, pros, cons, data, risks}
+ 
+ ## Decision
+ {What we chose and why}
+ 
++## Rejections
++- {Approach rejected and why}
++
+ ## Constraints
+ {Non-negotiables from the user}
+ 
++## Open questions
++- {What still needs confirmation}
++
++## Sources
++1. {Source}
++2. {Source}
++3. {Source}
++
+ ## Next steps
+ {Link to the plan}
+ ```
+diff --git a/skills/wi-improve-project/SKILL.md b/skills/wi-improve-project/SKILL.md
+index b9a628e..55132fe 100644
+--- a/skills/wi-improve-project/SKILL.md
++++ b/skills/wi-improve-project/SKILL.md
+@@ -7,6 +7,12 @@ description: Autonomously audit and improve an existing project. Identifies prob
+ 
+ Autopilot mode. You audit the existing codebase and systematically improve it.
+ 
++## Non-negotiables
++
++- Do not stop for approval on reversible improvements.
++- Ask at most one question, and only if blocked by missing prerequisites, an irreversible/destructive decision, or a critical ambiguity.
++- Proceed with explicit assumptions when safe; record them in the plan/pipeline artifacts.
++
+ ## Workflow
+ 
+ ### 0. Ensure per-project KB structure exists
+@@ -28,7 +34,7 @@ From audit results, create a prioritized list:
+ - **MAJOR** — Should fix. Performance bottlenecks, significant tech debt.
+ - **MINOR** — Nice to fix. Code style, minor optimizations.
+ 
+-Present to the user for approval. They may reorder or exclude items.
++Treat reversible improvements as approved by default. Escalate to the user only for irreversible or destructive decisions such as data/schema migrations, public API breaks, auth/billing commitments, vendor lock-in, or deletions that are hard to undo.
+ 
+ ### 3. Create the pipeline
+ 
+diff --git a/skills/wi-search-web/SKILL.md b/skills/wi-search-web/SKILL.md
+index 07d53d3..16e9a09 100644
+--- a/skills/wi-search-web/SKILL.md
++++ b/skills/wi-search-web/SKILL.md
+@@ -13,7 +13,21 @@ Agent instruction manual for deep web research.
+ 
+ One clear sentence. What do we need to know?
+ 
+-### 2. Good angle
++### 2. Hard gate
++
++Do not produce a recommendation until all of these are true:
++
++- You ran at least 3 distinct searches: one good angle, one bad/community angle, one data angle.
++- You have at least 3 distinct sources total.
++- You have at least 1 official source when recommending a product, API, framework, package, or vendor.
++- You have at least 1 bad/community source showing pitfalls, failures, complaints, or migration pain.
++- You have at least 1 data source for numbers, benchmarks, downloads, bundle size, release cadence, or maintenance signals.
++- You can state a confidence level: `HIGH`, `MEDIUM`, or `LOW`.
++- You can state explicit unknowns.
++
++If any gate is missing, keep researching or say `Recommendation withheld: evidence incomplete.`
++
++### 3. Good angle query
+ 
+ Search for:
+ - Official documentation
+@@ -21,7 +35,9 @@ Search for:
+ - Successful implementations (with links)
+ - Current version numbers and changelogs
+ 
+-### 3. Bad angle
++Run at least one explicit good-angle query.
++
++### 4. Bad/community angle query
+ 
+ Search for:
+ - GitHub issues, bug reports
+@@ -30,7 +46,9 @@ Search for:
+ - Migration horror stories
+ - Breaking changes between versions
+ 
+-### 4. Data angle
++Run at least one explicit bad/community-angle query.
++
++### 5. Data angle query
+ 
+ Gather numbers:
+ - Stars, downloads, npm trends
+@@ -39,7 +57,9 @@ Gather numbers:
+ - Last release date, maintenance status
+ - Number of open issues vs closed
+ 
+-### 5. Synthesis
++Run at least one explicit data-angle query.
++
++### 6. Synthesis
+ 
+ ```
+ What works (with sources) →
+@@ -48,6 +68,12 @@ Recommendation (for our context) →
+ What we reject (and why)
+ ```
+ 
++Base confidence on the actual evidence quality:
++
++- `HIGH` — hard gate fully satisfied, sources agree, unknowns are minor.
++- `MEDIUM` — hard gate satisfied, but trade-offs or missing data still matter.
++- `LOW` — recommendation is tentative or evidence is thin/conflicting.
++
+ ## Output format
+ 
+ ```markdown
+@@ -56,6 +82,11 @@ What we reject (and why)
+ ## Question
+ {One sentence}
+ 
++## Queries run
++- Good: {query}
++- Bad: {query}
++- Data: {query}
++
+ ## Good angle
+ {Findings with source links}
+ 
+@@ -70,8 +101,20 @@ What we reject (and why)
+ ## Recommendation
+ {Clear recommendation with reasoning}
+ 
++## Confidence
++{HIGH|MEDIUM|LOW} — {Why}
++
++## Unknowns
++- {What is still uncertain}
++
+ ## Rejected alternatives
+ {What we didn't choose and why}
++
++## Sources
++1. {Official source}
++2. {Bad/community source}
++3. {Data source}
++4. {Additional sources if used}
+ ```
+ 
+ ## Save location
+diff --git a/skills/wi-whytcard/SKILL.md b/skills/wi-whytcard/SKILL.md
+index 7d86b49..a849030 100644
+--- a/skills/wi-whytcard/SKILL.md
++++ b/skills/wi-whytcard/SKILL.md
+@@ -11,8 +11,9 @@ This skill is the **single entry point** that chains the core skills **in order*
+ 
+ - Do **not** ask the user questions by default.
+ - Proceed with explicit assumptions when something is unclear; record them in the brainstorm document.
+-- Only ask if blocked by missing credentials/prerequisites or an irreversible product decision.
++- Ask at most one question, and only if blocked by missing credentials/prerequisites, an irreversible decision, or a critical ambiguity that would invalidate the work.
+ - Do not use bypasses that hide problems (no “ignore/noCheck/passWithNoTests” style shortcuts).
++- Do not block on approval for reversible optimizations; escalate only irreversible or destructive decisions.
+ 
+ ## Default scope guard (important)
+ 
+@@ -38,7 +39,8 @@ Focus on making the project **build + run + lint + type-check + test** cleanly w
+ ### 2) Improve project (create + execute pipeline)
+ 
+ - Follow the same workflow as `wi-improve-project`, but in **autopilot**:
+-  - Do not pause for “approval”; treat the prioritized list as approved by default unless it triggers a stop condition.
++  - Do not pause for approval on reversible improvements; treat them as approved by default.
++  - Escalate only irreversible or destructive changes, or when a single critical ambiguity blocks safe execution.
+ - Create steps under:
+   - `.whytcard/projects/{id}/02_improvements/steps/`
+ - Execute each step with evidence captured in each step’s `evidence/` folder.

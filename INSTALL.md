@@ -1,134 +1,145 @@
-# Installation — WhytCard Intelligence
+# Installation - WhytCard Intelligence
 
-AI orchestration plugin for **Cursor** and **Claude Code**. This guide covers local installation (no marketplace publishing).
+Local install guide for the repo as it exists today.
 
----
+This file distinguishes:
+
+- official host-platform capabilities
+- this repo's actual installation behavior
+- community caveats that are useful in practice but not part of the official model
 
 ## Prerequisites
 
-- **Node.js** (required for hooks)
-- **Cursor** and/or **Claude Code**
+- Node.js in `PATH` for hook scripts and install helpers
+- Cursor and/or Claude Code
 
----
+## Quick install
 
-## Quick install (Windows)
-
-From the `WhytCard-Intelligence` folder:
+Windows:
 
 ```powershell
 .\scripts\install-plugin.ps1
 ```
 
-Then **restart Cursor** (or Reload Window: `Ctrl+Shift+P` → "Developer: Reload Window").
-
-## Quick install (Linux/macOS)
-
-From the `WhytCard-Intelligence` folder:
+Linux/macOS:
 
 ```bash
 bash ./scripts/install-plugin.sh
 ```
 
-Then restart Cursor (or Reload Window).
+Then reload the host tool.
 
-### What the script does (important)
+## What the current scripts actually install
 
-The script installs everything so Cursor detects it **without manual steps**:
+### Cursor
 
-- Copy plugin into: `~/.cursor/plugins/whytcard-intelligence`
-- Install Cursor **commands** into: `~/.cursor/commands/` (so `/wi-*` appears)
-- Install Cursor **skills** into: `~/.cursor/skills/`
-- Install Cursor **rules** into: `~/.cursor/rules/`
-- Install **global Cursor hooks** into: `~/.cursor/hooks.json` (so the orchestrator gates run everywhere)
+The install scripts currently do all of the following:
 
-Note: The plugin does **not** rely on Cursor plugin-level hooks (`$CURSOR_PLUGIN_ROOT`) to avoid environment issues on Windows. Global hooks use absolute paths.
+- copy the repo into `~/.cursor/plugins/whytcard-intelligence`
+- copy `commands/*.md` into `~/.cursor/commands/`
+- copy `skills/*` into `~/.cursor/skills/`
+- copy `rules/*.mdc` into `~/.cursor/rules/`
+- merge Cursor hooks into `~/.cursor/hooks.json`
 
-### Technical notes (Cursor vs Claude)
+Important implementation detail:
 
-- **Cursor** reads hooks declared in `.cursor-plugin/plugin.json` (here: `hooks/hooks.cursor.json`).
-- **Claude Code** reads hooks declared in `.claude-plugin/plugin.json` (here: `hooks/hooks.claude.json`).
+- `.cursor-plugin/plugin.json` declares `commands`, `skills`, and `rules`
+- it does not currently declare a hooks manifest
+- `hooks/hooks.cursor.json` is still the source template for Cursor hooks, but the installer merges those hooks into the user-level `~/.cursor/hooks.json`
 
-Goal: avoid environment variable issues (`$CURSOR_PLUGIN_ROOT` vs `$CLAUDE_PLUGIN_ROOT`).
+This is a repo-specific implementation choice. Official Cursor supports plugin manifests and user/project hook configs, but this repo uses user-level Cursor hook installation for predictable local behavior.
 
----
+### Claude Code
+
+The install scripts currently do all of the following:
+
+- copy the repo into the Cursor plugin directory above
+- register `whytcard-intelligence@local` in `~/.claude/plugins/installed_plugins.json`
+- enable the plugin in `~/.claude/settings.json`
+- rely on `.claude-plugin/plugin.json` for Claude-facing plugin metadata
+- declare Claude hooks via `.claude-plugin/plugin.json -> hooks/hooks.claude.json`
+
+Do not describe this as symmetric with Cursor. The repo uses different wiring on each host.
+
+## Hooks and manifests
+
+Officially:
+
+- Cursor supports hooks in `~/.cursor/hooks.json` and project-level `.cursor/hooks.json`, plus plugin packaging.
+- Claude Code supports hooks, plugins, settings scopes, slash commands, and subagents.
+
+In this repo:
+
+- Cursor hook source file: `hooks/hooks.cursor.json`
+- Cursor effective install target: `~/.cursor/hooks.json`
+- Claude hook source file: `hooks/hooks.claude.json`
+- Claude plugin manifest: `.claude-plugin/plugin.json`
+- Cursor plugin manifest: `.cursor-plugin/plugin.json`
+
+If documentation ever claims that both hosts use identical hook-manifest behavior, that documentation is wrong.
 
 ## Post-install checks
 
-### 1. “Third-party plugins” setting
+### Cursor checks
 
-Cursor must allow third-party plugins:
+1. Enable third-party content in Cursor settings if your installation requires it.
+2. Reload Cursor.
+3. In chat, type `/wi` and confirm commands such as `/wi-init-project`, `/wi-brainstorm`, and `/wi-whytcard`.
+4. Verify rules appear in Cursor settings.
+5. Verify `~/.cursor/hooks.json` contains the WhytCard hook entries after install.
 
-- **Settings** → **Features** → **Include third-party Plugins, Skills, and other configs** = **ON**
+### Claude Code checks
 
-If disabled, the plugin’s commands and skills won’t appear.
+1. Open Claude Code.
+2. Verify `~/.claude/plugins/installed_plugins.json` contains `whytcard-intelligence@local`.
+3. Verify `~/.claude/settings.json` has `enabledPlugins.whytcard-intelligence@local = true`.
+4. Verify plugin commands/skills are available in the CLI.
 
-### 2. Available commands
+## Canonical project KB behavior
 
-In Cursor chat, type `/` and verify:
+`wi-init-project` creates the base scaffold:
 
-- `/wi-whytcard` (one-shot workflow: init → brainstorm → improve → review)
-- `/wi-init-project` (creates `.whytcard/projects/<id>/...`)
-- `/wi-brainstorm`
-- `/wi-add-feature`
-- `/wi-fix-bug`
-- `/wi-research-stack`
-- etc.
+- `.whytcard/projects/<id>/00_orchestrator/`
+- `.whytcard/projects/<id>/01_foundation/steps/S001-project-scaffold/`
 
-### 3. Rules
+Real project execution then belongs under:
 
-Rules (`.mdc`) should appear in **Settings** → **Rules** with the plugin prefix.
+- `.whytcard/projects/<id>/pipeline/steps/`
+- `.whytcard/projects/<id>/research/`
+- `.whytcard/projects/<id>/brainstorms/`
+- `.whytcard/projects/<id>/plans/`
+- `.whytcard/projects/<id>/reviews/`
+- `.whytcard/projects/<id>/proofs/`
 
----
+Do not reintroduce legacy numbered phase folders for execution work.
 
-## Claude Code (CLI)
+## Community caveats (non-official)
 
-The plugin is shared via `~/.claude/`. If Cursor is already configured, Claude Code uses the same installation.
+These notes are useful, but they are not the primary platform model:
 
-To install only for Claude Code (without Cursor):
+- Cursor community reports show intermittent Windows issues with project-level hooks. This repo avoids relying on project-level Cursor hooks and installs into `~/.cursor/hooks.json` instead.
+- Claude Code community reports show cases where plugin registration and enabled state fall out of sync between `installed_plugins.json` and `settings.json`. This repo writes both files during install to reduce that failure mode.
 
-```powershell
-.\scripts\install-plugin.ps1
-```
-
-Puis dans Claude Code :
-
-```
-/plugin
-```
-
-Tab **Installed** → `whytcard-intelligence@local` should be listed and enabled.
-
----
+Treat caveats as caveats. The official docs remain the source of truth.
 
 ## Troubleshooting
 
-### Commands don’t show up
+### Commands do not appear
 
-1. Ensure “Include third-party Plugins…” is enabled.
-2. Re-run the install script and restart/reload Cursor.
-3. Verify `~/.claude/plugins/installed_plugins.json` contains `whytcard-intelligence@local` with the correct `installPath`.
+1. Reload the host tool.
+2. Re-run the install script.
+3. Check the expected install targets listed above.
 
-### Hook errors
+### Hooks do not run
 
-Hooks use `$CLAUDE_PLUGIN_ROOT` (Claude) or `$CURSOR_PLUGIN_ROOT` (Cursor). If not defined, the plugin falls back to `__dirname`. Ensure Node.js is in `PATH`.
+1. Confirm Node.js is available in `PATH`.
+2. Check `~/.cursor/hooks.json` for Cursor.
+3. Check `.claude-plugin/plugin.json` and `~/.claude/settings.json` for Claude Code.
 
-### Updating after plugin changes
+### Updating after repo changes
 
-Re-run the install script to copy updated files:
-
-```powershell
-.\scripts\install-plugin.ps1
-```
-
----
-
-## Publishing (optional)
-
-To distribute via official marketplaces:
+Re-run the install script. The scripts copy the current repo contents again and refresh the relevant config files.
 
 ## Language
 
-Docs are written in English, but when interacting with **Jerome**, the orchestrator must **speak French**.
-
-- **Cursor** : [cursor.com/marketplace/publish](https://cursor.com/marketplace/publish)
-- **Claude** : [platform.claude.com/plugins/submit](https://platform.claude.com/plugins/submit)
+Docs stay in English. When interacting with Jerome, the orchestrator speaks French.
