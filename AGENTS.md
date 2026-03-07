@@ -249,7 +249,7 @@ This is a **Cursor/Claude plugin** (not a web app). There is no build step, no n
 - **Commands, skills, rules**: Markdown/MDC files that register as `/wi-*` commands in Cursor.
 
 ### How to install/refresh
-Run `bash scripts/install-plugin.sh` from the repo root. This is idempotent and safe to re-run.
+Run `bash scripts/install-plugin.sh` (Linux/macOS) or `.\scripts\install-plugin.ps1` (Windows) from the repo root. Both scripts are idempotent and safe to re-run.
 
 ### How to test
 There is no test suite. Verify the plugin works by running the hook scripts directly with piped JSON input:
