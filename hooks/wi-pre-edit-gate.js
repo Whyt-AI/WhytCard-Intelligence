@@ -2,22 +2,15 @@
 /**
  * wi-pre-edit-gate — PreToolUse hook for Edit/Write/NotebookEdit
  *
- * Two roles:
- * 1. Deny direct application-code edits by the orchestrator
- * 2. Inject quality reminders (visual, version, research) for legitimate edits
+ * This hook enforces one critical guardrail:
+ * - deny direct application-code edits by the orchestrator
  *
- * Blocks forbidden edits and injects context reminders for allowed ones.
- * Works in Cursor via the shared output module.
+ * Notes:
+ * - Cursor preToolUse official schema focuses on permission decisions.
+ * - Advisory reminders are emitted in postToolUse where additional_context is supported.
  */
 
-const {
-  handleStdin,
-  injectContext,
-  emptyResponse,
-  denyAction,
-  isVisualFile,
-  loadConfig,
-} = require("./lib/output");
+const { handleStdin, emptyResponse, denyPreToolUse } = require("./lib/output");
 
 const ORCHESTRATION_PATTERNS = [
   /(?:^|[/\\])hooks[/\\]/i,
@@ -83,63 +76,13 @@ function isApplicationCode(filePath) {
 }
 
 handleStdin((data) => {
-  const toolName = data.tool_name || "";
   const toolInput = data.tool_input || {};
   const filePath = getFilePath(toolInput);
-  const filePathLower = filePath.toLowerCase();
-  const cwd = data.cwd || process.cwd();
-  const config = loadConfig(cwd);
-  const reminders = [];
 
   if (isApplicationCode(filePath)) {
-    return denyAction(
-      "PreToolUse",
-      `WC-DENY: Direct edit blocked for application code (${filePath}). As the orchestrator, delegate code changes to a subagent. Direct edits are reserved for orchestration/plugin files such as hooks/, rules/, commands/, skills/, scripts/, plugin manifests, .whytcard/, markdown, and .mdc.`,
-    );
+    const reason = `WC-DENY: Direct edit blocked for application code (${filePath}). As the orchestrator, keep your hands off target code: create or refine the current step contract in .whytcard, bootstrap it with /wi-create-step if needed, resolve and mark the step with /wi-dispatch-step, then delegate execution to a shipped WhytCard subagent such as /whytcard-implementer, /whytcard-debugger, or /whytcard-reviewer. If no reusable specialist fits, add one with /wi-create-agent. Direct edits are reserved for orchestration/plugin files such as hooks/, rules/, commands/, skills/, agents/, scripts/, plugin manifests, .whytcard/, markdown, and .mdc.`;
+    return denyPreToolUse(reason, reason);
   }
 
-  if (config.visualVerification && isVisualFile(filePathLower)) {
-    const vp = config.viewports || [375, 768, 1440];
-    reminders.push(
-      `WC-VISUAL: Visual file detected. After editing, evaluate with rules/visual-verify.mdc: screenshots at ${vp.length} viewports (${vp.join("/")}px), dark+light modes.`,
-    );
-  }
-
-  if (config.versionCheck && filePathLower.endsWith("package.json")) {
-    const editContent =
-      toolInput.new_string || toolInput.content || toolInput.insert || "";
-    const isDependencyEdit =
-      editContent.includes("dependencies") ||
-      editContent.includes("devDependencies") ||
-      editContent.includes("peerDependencies") ||
-      editContent.includes("optionalDependencies") ||
-      /["'][\w@/-]+["']\s*:\s*["']\^?~?[\d]/.test(editContent) ||
-      editContent === "";
-    if (isDependencyEdit) {
-      reminders.push(
-        "WC-VERSIONS: Dependency change detected. Evaluate with rules/version-check.mdc: verify latest version via live search, check maintenance, compare alternatives.",
-      );
-    }
-  }
-
-  if (
-    config.researchFirst &&
-    toolName === "Write" &&
-    !isOrchestrationFile(filePathLower)
-  ) {
-    reminders.push(
-      "WC-RESEARCH: New file creation. Evaluate with rules/research-first.mdc: was the approach researched? dual-angle? alternatives considered?",
-    );
-  }
-
-  if (isOrchestrationFile(filePathLower)) {
-    reminders.push(
-      "WC-QUALITY: Allowed direct edit. Keep the orchestrator contract intact: preserve delegation rules, keep instructions executable, and require concrete evidence paths and gate commands.",
-    );
-  }
-
-  if (reminders.length > 0) {
-    return injectContext("PreToolUse", reminders.join("\n"));
-  }
   return emptyResponse();
 });

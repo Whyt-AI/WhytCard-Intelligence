@@ -1,7 +1,7 @@
 {
   "description": "WhytCard Intelligence orchestrator hooks — enforces delegation, quality gates, and pipeline discipline. (Claude Code)",
   "hooks": {
-    "SessionStart": [
+    "sessionStart": [
       {
         "matcher": "",
         "hooks": [
@@ -13,7 +13,7 @@
         ]
       }
     ],
-    "UserPromptSubmit": [
+    "beforeSubmitPrompt": [
       {
         "matcher": "",
         "hooks": [
@@ -25,7 +25,7 @@
         ]
       }
     ],
-    "PreToolUse": [
+    "preToolUse": [
       {
         "matcher": "Edit|Write|NotebookEdit",
         "hooks": [
@@ -37,7 +37,7 @@
         ]
       }
     ],
-    "PostToolUse": [
+    "postToolUse": [
       {
         "matcher": "Edit|Write|NotebookEdit",
         "hooks": [
@@ -49,7 +49,7 @@
         ]
       }
     ],
-    "Stop": [
+    "stop": [
       {
         "matcher": "",
         "hooks": [

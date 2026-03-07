@@ -2,7 +2,7 @@
   "name": "whytcard-intelligence",
   "displayName": "WhytCard Intelligence",
   "version": "2.0.5",
-  "description": "Autonomous AI orchestrator plugin: research, brainstorm, plan, execute, review. Creates and manages specialized sub-agents for any project type.",
+  "description": "Standalone Cursor-only orchestrator plugin. Ships its own hooks, commands, skills, rules, and subagents for research-first, evidence-first multi-agent execution. Requires Cursor and a working Node.js runtime.",
   "author": {
     "name": "WhytCard",
     "email": "hello@whytcard.ai"

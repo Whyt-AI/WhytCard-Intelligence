@@ -22,4 +22,5 @@ Non-negotiables:
 - research first
 - compare at least 3 approaches unless the user narrows scope
 - separate official behavior from community caveats
+- produce pipeline-ready next steps for later delegation
 - do not claim exhaustive understanding after partial reading

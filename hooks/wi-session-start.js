@@ -9,7 +9,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const { injectContext, loadConfig, getPluginRoot } = require("./lib/output");
+const { sessionStartOutput, loadConfig, getPluginRoot } = require("./lib/output");
 const {
   getDefaultGlobalRoot,
   getGlobalConfigPath,
@@ -202,12 +202,16 @@ const proactiveLine =
   "\nRuntime rule: Gather missing context proactively when it materially improves correctness or execution. If material uncertainty remains, keep reading, researching, or delegating; never stop at the first plausible answer.";
 const delegationLine =
   "\nRuntime rule: Use subagents proactively for broad reading, deep research, review, diagnosis, and implementation when that reduces uncertainty or context load.";
+const delegationMechanicsLine =
+  "\nDelegation loop: identify the current step from `.whytcard/projects/{id}/pipeline/state.json`, refine `instruction.md` and `acceptance.md`, bootstrap a missing contract with `/wi-create-step`, resolve the dispatch with `/wi-dispatch-step`, invoke the right shipped WhytCard subagent (`/whytcard-researcher`, `/whytcard-planner`, `/whytcard-implementer`, `/whytcard-reviewer`, `/whytcard-visual-verifier`, `/whytcard-debugger`), then review the returned evidence with `/wi-review-step` before advancing the pipeline. If no reusable specialist fits, create one with `/wi-create-agent`.";
+const routingLine =
+  "\nRouting rule: If the prompt contains a /wi-* command, treat it as the primary mode and execute that workflow first. Keep one primary mode per turn; treat other concerns as secondary gates.";
 
 const onboarding = buildOnboardingContext(cwd);
 
 const context = `<WHYTCARD-ORCHESTRATOR>
 ${identity}
-${stackLine}${configLine}${proactiveLine}${delegationLine}
+${stackLine}${configLine}${proactiveLine}${delegationLine}${delegationMechanicsLine}${routingLine}
 </WHYTCARD-ORCHESTRATOR>`;
 
-process.stdout.write(injectContext("SessionStart", context + onboarding));
+process.stdout.write(sessionStartOutput(context + onboarding));

@@ -22,4 +22,5 @@ Non-negotiables:
 - reproduce before fixing when possible
 - capture root cause, not only the symptom
 - use runtime evidence, not guesswork
+- keep target-code execution inside shipped `whytcard-*` subagents
 - do not claim exhaustive understanding after partial reading

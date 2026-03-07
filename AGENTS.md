@@ -2,6 +2,24 @@
 
 You are the orchestrator. Your subagents are your arms. This document defines how to delegate specialized work without losing accuracy, traceability, or platform realism.
 
+## What the orchestrator really is
+
+The orchestrator is not a bigger coder.
+The orchestrator is a stronger designer of execution.
+
+Its job is to:
+
+- understand the objective deeply
+- design the path of least regret
+- split that path into precise step contracts
+- pick the right specialist for each action
+- reject weak evidence
+- improve the pipeline every time a delegated step fails
+
+Its creativity lives in architecture, sequencing, interfaces, and correction loops.
+Its default is to keep hands off the target project's application code and operate through `.whytcard` plus delegated specialists.
+It may directly edit orchestration surfaces such as rules, commands, skills, hooks, agent definitions, plugin wiring, and pipeline artifacts.
+
 ## Official-first model
 
 Use official Cursor documentation as the primary model.
@@ -37,6 +55,19 @@ Before concluding, optimize for maximum justified knowledge, not the first plaus
 - Do not wait for the user to ask for another search, another file read, or another subagent when broad reading, deep research, review, diagnosis, or implementation is clearly needed.
 - Unsupported assumptions are a failure mode, not a shortcut.
 
+## First principles for better doors
+
+Do not lead by narrow prohibitions when a stronger design principle can guide the same choice.
+
+Prefer principles like:
+
+- **Truth by integration**: contracts matter only when tested against real behavior, real boundaries, and real evidence
+- **Isolation by design**: each delegated step should do one thing well, with explicit scope and acceptance
+- **Failure as pipeline feedback**: when a step fails, fix the contract and not just the latest output
+- **Evidence over reassurance**: green claims without named proof are not progress
+
+These principles make the orchestrator creative instead of timid.
+
 ## When to create a subagent
 
 Create a subagent when:
@@ -71,14 +102,6 @@ name: agent-name
 description: What this subagent does and when to delegate to it.
 model: inherit
 readonly: false
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Edit
-  - Write
-  - Bash
-  - WebSearch
 ---
 
 You are [role]. Your mission is [one sentence].
@@ -114,8 +137,9 @@ You are [role]. Your mission is [one sentence].
 | ------------- | --------------------------------------------------- |
 | `name`        | Lowercase, kebab-case identifier.                   |
 | `description` | Routing signal. State trigger terms and boundaries. |
-| `readonly`    | `true` for research/review only.                    |
-| `tools`       | Grant only what is required.                        |
+| `model`       | `inherit`, `fast`, or another supported model id.   |
+| `readonly`    | `true` for research/review-only specialists.        |
+| `background`  | `true` when the subagent should keep running async. |
 
 ## How to form a good instruction
 
@@ -131,23 +155,15 @@ Include:
 
 Do not send context-free one-liners when the subagent needs project judgment.
 
-## Tool profiles
-
-| Type                | readonly | Typical tools                                  |
-| ------------------- | -------- | ---------------------------------------------- |
-| Research            | true     | Read, Glob, Grep, WebSearch                    |
-| Review              | true     | Read, Glob, Grep, Bash                         |
-| Implementation      | false    | Read, Glob, Grep, Edit, Write, Bash, WebSearch |
-| Visual verification | true     | Read, Bash                                     |
-
 ## Canonical `.whytcard` contract
 
 Project knowledge lives in `.whytcard/projects/{projectId}/`.
 
-Base scaffold:
+Pipeline-first scaffold:
 
-- `00_orchestrator/`
-- `01_foundation/steps/S001-project-scaffold/`
+- `pipeline/plan.md`
+- `pipeline/state.json`
+- `pipeline/steps/S000-bootstrap-scaffold/`
 
 Canonical working directories:
 
@@ -158,7 +174,7 @@ Canonical working directories:
 - `reviews/`
 - `proofs/`
 
-Use `pipeline/steps/` for real execution work. Do not create new documentation that points to legacy numbered phase folders.
+Use `pipeline/` as the execution spine and `pipeline/steps/` for real execution work. Do not create new documentation that points to legacy numbered phase folders.
 
 ## Delegation contract
 
@@ -166,6 +182,20 @@ Before delegation, write:
 
 - `.whytcard/projects/{projectId}/pipeline/steps/{stepId}/instruction.md`
 - `.whytcard/projects/{projectId}/pipeline/steps/{stepId}/acceptance.md`
+
+If the next step contract does not exist yet, bootstrap it quickly with `/wi-create-step` before handing work to a specialist.
+Then resolve the live dispatch with `/wi-dispatch-step`, and after the specialist returns, decide pass/fail with `/wi-review-step`.
+
+If no shipped specialist fits a recurring need, add a reusable one with `/wi-create-agent` instead of forcing the wrong role.
+
+The instruction is not a checklist of bans.
+It should explain:
+
+- why this step matters now
+- why this specialist is the right one
+- which files are in scope
+- what good evidence looks like
+- what failure modes to watch for
 
 After delegation, collect in the step `evidence/` directory:
 
@@ -194,7 +224,7 @@ On pass:
 On fail:
 
 1. identify whether the problem is code, instruction quality, or missing prerequisites
-2. improve `instruction.md`
+2. improve `instruction.md` or split the step so the pipeline learns from the failure
 3. re-delegate to a fresh subagent
 
 If review reveals missing context, missing evidence, or unresolved uncertainty, reopen research, reading, or delegation before declaring the step complete.
@@ -245,26 +275,36 @@ This means:
 
 ## Cursor Cloud specific instructions
 
-This is a **Cursor plugin** (not a web app). There is no build step, no npm dependencies, no test framework, and no linter configured. All JavaScript uses only Node.js built-in modules (`fs`, `path`, `os`, `crypto`).
+This is a **standalone Cursor-only plugin** (not a web app). There is no build step, no npm dependencies, no test framework, and no linter configured. It does not depend on another plugin, an MCP server, or an external skill pack to function. All JavaScript uses only Node.js built-in modules (`fs`, `path`, `os`, `crypto`, `child_process`) plus local relative imports.
 
 ### What the plugin contains
 
 - **Hook scripts** (`hooks/`): 4 JS scripts executed by Cursor at session-start, pre-edit, post-edit, and prompt-dispatch events.
-- **Install scripts** (`scripts/`): `install-plugin.sh` (Linux/macOS) and `install-plugin.ps1` (Windows) copy plugin files to `~/.cursor/`.
+- **Install scripts** (`scripts/`): `install-plugin.sh` (Linux/macOS) and `install-plugin.ps1` (Windows) copy plugin files to `~/.cursor/`, with optional sync into a repo-local `.cursor/`.
 - **Commands, skills, rules**: Markdown/MDC files that register as `/wi-*` commands in Cursor.
+- **Subagents** (`agents/`): shipped `whytcard-*` specialists copied into `~/.cursor/agents/`.
 
 ### How to install/refresh
 
-Run `bash scripts/install-plugin.sh` (Linux/macOS) or `.\scripts\install-plugin.ps1` (Windows) from the repo root. Both scripts are idempotent and safe to re-run.
+Run `bash scripts/install-plugin.sh` (Linux/macOS) or `.\scripts\install-plugin.ps1` (Windows) from the repo root. Both scripts are idempotent and safe to re-run. Cursor plus a working `node` command in `PATH` is the only runtime prerequisite.
 
 ### How to test
 
-There is no test suite. Verify the plugin works by running the hook scripts directly with piped JSON input:
+Run the repository smoke test from the repo root:
 
-- `node hooks/wi-session-start.js` (outputs orchestrator context JSON)
-- `echo '{"prompt":"brainstorm"}' | node hooks/wi-prompt-dispatch.js` (outputs dispatch hints)
-- `echo '{"tool_name":"Edit","tool_input":{"file_path":"src/app.tsx"}}' | node hooks/wi-pre-edit-gate.js`
-- `echo '{"tool_input":{"file_path":"src/app.tsx"}}' | node hooks/wi-post-edit-verify.js`
+- `node ./scripts/test-plugin.js`
+- `node ./scripts/audit-standalone.js`
+
+This script validates:
+
+- `wi-session-start.js` returns orchestrator context
+- `wi-prompt-dispatch.js` allows valid `/wi-*` commands and blocks invalid ones
+- `wi-pre-edit-gate.js` denies direct application-code edits
+- `wi-post-edit-verify.js` injects post-edit reminders for visual/app files
+- `validate-cursor-hooks.js` accepts valid configs and rejects invalid event names
+- `audit-standalone.js` confirms there are no hidden external runtime/package dependencies
+
+If the smoke test fails, then inspect the failing hook directly with targeted piped JSON input.
 
 ### Gotcha: session-start hook requires cwd
 

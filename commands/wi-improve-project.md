@@ -22,4 +22,5 @@ Non-negotiables:
 - prioritize by impact
 - treat reversible improvements as safe by default
 - keep official behavior separate from caveats
+- keep target-code execution inside shipped `whytcard-*` subagents
 - do not claim exhaustive understanding after partial reading

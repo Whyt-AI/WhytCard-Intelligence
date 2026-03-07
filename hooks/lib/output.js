@@ -1,14 +1,9 @@
 /**
- * Shared output utilities for WhytCard Intelligence hooks (Cursor-only).
+ * Shared output utilities for WhytCard Intelligence hooks.
  *
- * Detects the running platform and outputs the hook JSON payload.
- * This is the single source of truth for hook output format — no hook
- * script should construct JSON directly.
- *
- * Platform detection:
- *   - CURSOR_PLUGIN_ROOT env var → Cursor
- *   - __CURSOR_HOOKS__ env var → Cursor (alternative signal)
- *   - Neither → unknown, output Cursor-compatible format
+ * Cursor hook contracts evolve. We prefer the official output fields documented
+ * in Cursor docs (additional_context, permission, continue, etc.) so behavior
+ * remains stable across updates.
  */
 
 const fs = require("fs");
@@ -31,68 +26,67 @@ function detectPlatform() {
 
 // ─── Output formatting ─────────────────────────────────────────────────
 
-/**
- * Inject context into the AI agent's conversation.
- * This is the core function — used by session-start, pre-edit, post-edit, and prompt hooks.
- *
- * @param {string} eventName — The hook event (e.g., "SessionStart", "PreToolUse")
- * @param {string} context — The text to inject into the agent's context
- */
-function injectContext(eventName, context) {
-  const platform = detectPlatform();
-
-  if (platform === "cursor" || platform === "unknown") {
-    // Cursor-compatible format.
-    // Unknown falls back to the same format for safe no-op behavior.
-  }
-  return JSON.stringify({
-    hookSpecificOutput: {
-      hookEventName: eventName,
-      additionalContext: context,
-    },
-  });
+function stringify(payload) {
+  return JSON.stringify(payload || {});
 }
 
 /**
  * Output an empty response (no action needed).
  */
 function emptyResponse() {
-  return JSON.stringify({});
+  return stringify({});
 }
 
 /**
- * Block/deny an action with a reason.
- * Used by permission-granting hooks (PreToolUse, Stop).
- *
- * @param {string} eventName — The hook event
- * @param {string} reason — Why the action is blocked
+ * `sessionStart` output: inject startup context and optional env vars.
  */
-function denyAction(eventName, reason) {
-  return JSON.stringify({
-    hookSpecificOutput: {
-      hookEventName: eventName,
-      permissionDecision: "deny",
-      permissionDecisionReason: reason,
-    },
+function sessionStartOutput(additionalContext, env) {
+  const payload = {};
+  if (additionalContext) payload.additional_context = String(additionalContext);
+  if (env && typeof env === "object" && Object.keys(env).length > 0) {
+    payload.env = env;
+  }
+  return stringify(payload);
+}
+
+/**
+ * `postToolUse` output: inject context after tool execution.
+ */
+function postToolUseContext(additionalContext) {
+  if (!additionalContext) return emptyResponse();
+  return stringify({ additional_context: String(additionalContext) });
+}
+
+/**
+ * `preToolUse` deny response.
+ *
+ * `permission` controls tool execution. `user_message` is shown in the UI.
+ * `agent_message` is fed back to the model for recovery behavior.
+ */
+function denyPreToolUse(reason, agentMessage) {
+  const payload = {
+    permission: "deny",
+    user_message: String(reason || "Action denied by policy."),
+  };
+  if (agentMessage) payload.agent_message = String(agentMessage);
+  return stringify(payload);
+}
+
+/**
+ * `beforeSubmitPrompt` deny response.
+ */
+function denyBeforeSubmitPrompt(reason) {
+  return stringify({
+    continue: false,
+    user_message: String(reason || "Prompt blocked by policy."),
   });
 }
 
 /**
- * Allow an action (explicit approval).
- *
- * @param {string} eventName — The hook event
- * @param {string} [reason] — Optional reason for allowing
+ * `beforeSubmitPrompt` explicit allow response.
  */
-function allowAction(eventName, reason) {
-  if (!reason) return emptyResponse();
-
-  return JSON.stringify({
-    hookSpecificOutput: {
-      hookEventName: eventName,
-      permissionDecision: "allow",
-      permissionDecisionReason: reason,
-    },
-  });
+function allowBeforeSubmitPrompt() {
+  return stringify({ continue: true });
 }
 
 // ─── Shared utilities ───────────────────────────────────────────────────
@@ -185,10 +179,12 @@ function handleStdin(handler) {
 
 module.exports = {
   detectPlatform,
-  injectContext,
   emptyResponse,
-  denyAction,
-  allowAction,
+  sessionStartOutput,
+  postToolUseContext,
+  denyPreToolUse,
+  denyBeforeSubmitPrompt,
+  allowBeforeSubmitPrompt,
   isVisualFile,
   loadConfig,
   getPluginRoot,

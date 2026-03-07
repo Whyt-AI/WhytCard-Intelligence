@@ -21,5 +21,6 @@ Non-negotiables:
 
 - initialize the base scaffold first
 - keep execution traceable under `pipeline/steps/`
+- keep target-code execution inside shipped `whytcard-*` subagents
 - validate the resulting project with real gates
 - do not claim exhaustive understanding after partial reading

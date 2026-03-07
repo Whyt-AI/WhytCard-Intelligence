@@ -15,6 +15,7 @@ Audit the existing codebase and systematically improve it.
 - Ask at most one question, and only if blocked by missing prerequisites, an irreversible/destructive decision, or a critical ambiguity.
 - Proceed with explicit assumptions when safe; record them in the plan/pipeline artifacts.
 - If exhaustive reading was requested, list the requested corpus and do not claim full understanding until all requested items were read.
+- You own `.whytcard` and the pipeline state. Subagents own the scoped work.
 
 ## Workflow
 
@@ -24,11 +25,10 @@ Audit the existing codebase and systematically improve it.
 
 ### 1. Audit
 
-Launch audit subagents in parallel (each using the relevant skill):
-- **Code quality** - dead code, duplication, naming, complexity (use review-codebase skill)
-- **Performance** - bottlenecks, bundle size, unnecessary re-renders (use perf-audit skill)
-- **Security** - vulnerabilities, secrets, injection vectors (use security-audit skill)
-- **Dependencies** - outdated, unmaintained, vulnerable packages
+Launch audit specialists in parallel:
+- `whytcard-reviewer` - code quality, consistency, test gaps
+- `whytcard-researcher` - dependencies, current versions, maintenance status, official docs
+- `whytcard-reviewer` or `whytcard-debugger` - security and runtime risk areas when evidence is needed
 
 ### 2. Prioritize
 
@@ -54,7 +54,12 @@ Use descriptive slugs such as `S020-improvement-remove-dead-code`.
 
 ### 4. Execute
 
-Delegate each step to an implementation subagent. Review evidence. Iterate on failure.
+For each approved step:
+
+1. Refine `instruction.md` and `acceptance.md`.
+2. Delegate execution to `whytcard-implementer`.
+3. Review evidence with `whytcard-reviewer`.
+4. If a step fails, fix the step contract and relaunch with the right specialist (`whytcard-debugger` if diagnosis is needed).
 
 ### 5. Verify
 

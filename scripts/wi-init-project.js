@@ -12,6 +12,7 @@
  * Notes:
  * - Creates files only if missing (idempotent).
  * - Keeps content generic (plugin-owned templates), no Whytcard-specific data.
+ * - Uses a pipeline-first layout where `pipeline/` is the execution spine.
  */
 
 const fs = require("node:fs");
@@ -51,15 +52,22 @@ function main() {
   const kbRoot = path.join(repoRoot, ".whytcard");
   const projRoot = path.join(kbRoot, "projects", projectId);
 
-  // Directories (base scaffold + canonical working dirs)
+  const pipelineRoot = path.join(projRoot, "pipeline");
+  const bootstrapStepRoot = path.join(
+    pipelineRoot,
+    "steps",
+    "S000-bootstrap-scaffold",
+  );
+
+  // Directories (pipeline-first scaffold + canonical supporting dirs)
   for (const d of [
     kbRoot,
     path.join(kbRoot, "projects"),
     projRoot,
-    path.join(projRoot, "00_orchestrator"),
-    path.join(projRoot, "01_foundation", "steps", "S001-project-scaffold"),
-    path.join(projRoot, "01_foundation", "steps", "S001-project-scaffold", "evidence"),
-    path.join(projRoot, "pipeline", "steps"),
+    pipelineRoot,
+    path.join(pipelineRoot, "steps"),
+    bootstrapStepRoot,
+    path.join(bootstrapStepRoot, "evidence"),
     path.join(projRoot, "research"),
     path.join(projRoot, "brainstorms"),
     path.join(projRoot, "plans"),
@@ -71,9 +79,9 @@ function main() {
 
   // Files (generic, minimal, meant to be filled during conversation)
   writeIfMissing(
-    path.join(projRoot, "00_orchestrator", "master_plan.md"),
+    path.join(pipelineRoot, "plan.md"),
     [
-      "# Master Plan",
+      "# Active Pipeline Plan",
       "",
       `> Project: ${projectId}`,
       `> Created: ${new Date().toISOString()}`,
@@ -87,35 +95,39 @@ function main() {
       "- No dead code, no duplication",
       "- No mocks/placeholders for real behavior",
       "",
+      "## Pipeline contract",
+      "- `pipeline/state.json` is the current execution state.",
+      "- `pipeline/steps/` contains executable step contracts.",
+      "- `plans/` stores supporting plan artifacts and revisions.",
+      "",
       "## Next steps",
-      "- Fill state_machine.json and create the next step instruction/acceptance",
+      "- Fill `plans/` with the first execution plan revision if needed.",
+      "- Update `pipeline/state.json` as steps are delegated and validated.",
       "",
     ].join("\n")
   );
 
   writeIfMissing(
-    path.join(projRoot, "00_orchestrator", "state_machine.json"),
+    path.join(pipelineRoot, "state.json"),
     JSON.stringify(
       {
         version: 1,
         projectId,
-        startDate: new Date().toISOString().slice(0, 10),
-        currentPhase: "01_foundation",
-        phases: [
+        createdAt: new Date().toISOString(),
+        currentStep: "S000",
+        currentPlan: "pipeline/plan.md",
+        steps: [
           {
-            id: "01_foundation",
-            name: "Foundation",
+            id: "S000",
+            slug: "bootstrap-scaffold",
+            title: "Create pipeline-first .whytcard scaffold",
+            agent: "orchestrator",
             status: "PENDING",
-            steps: [
-              {
-                id: "S001",
-                slug: "project-scaffold",
-                title: "Create .whytcard project scaffold",
-                agent: "orchestrator",
-                status: "PENDING",
-                attempts: 0,
-              },
-            ],
+            attempts: 0,
+            instructionPath:
+              "pipeline/steps/S000-bootstrap-scaffold/instruction.md",
+            acceptancePath:
+              "pipeline/steps/S000-bootstrap-scaffold/acceptance.md",
           },
         ],
       },
@@ -125,34 +137,36 @@ function main() {
   );
 
   writeIfMissing(
-    path.join(projRoot, "01_foundation", "steps", "S001-project-scaffold", "instruction.md"),
+    path.join(bootstrapStepRoot, "instruction.md"),
     [
-      "# S001: Project scaffold",
+      "# S000: Bootstrap scaffold",
       "",
       "## Intent",
-      "Create a clean, reproducible .whytcard project structure that will be filled step-by-step during discussion.",
+      "Create a clean, reproducible, pipeline-first `.whytcard` project structure that can drive future delegation and verification.",
       "",
       "## Scope (allowed changes)",
       `- .whytcard/projects/${projectId}/**`,
       "",
       "## Micro-action",
-      "- Ensure the scaffold exists (directories + minimal files) without overwriting existing work.",
+      "- Ensure `pipeline/state.json`, `pipeline/plan.md`, and the bootstrap step exist without overwriting existing work.",
       "",
       "## Constraints",
       "- Must be idempotent (safe to re-run)",
       "- No project-specific business content inside the plugin templates",
+      "- `pipeline/steps/` is the only execution step tree",
       "",
     ].join("\n")
   );
 
   writeIfMissing(
-    path.join(projRoot, "01_foundation", "steps", "S001-project-scaffold", "acceptance.md"),
+    path.join(bootstrapStepRoot, "acceptance.md"),
     [
-      "# Acceptance: S001 Project scaffold",
+      "# Acceptance: S000 Bootstrap scaffold",
       "",
-      "- [ ] `.whytcard/projects/<projectId>/00_orchestrator/master_plan.md` exists",
-      "- [ ] `.whytcard/projects/<projectId>/00_orchestrator/state_machine.json` exists and is valid JSON",
-      "- [ ] `instruction.md` and `acceptance.md` exist for S001",
+      "- [ ] `.whytcard/projects/<projectId>/pipeline/plan.md` exists",
+      "- [ ] `.whytcard/projects/<projectId>/pipeline/state.json` exists and is valid JSON",
+      "- [ ] `instruction.md` and `acceptance.md` exist for `S000-bootstrap-scaffold`",
+      "- [ ] supporting directories exist: `research/`, `brainstorms/`, `plans/`, `reviews/`, `proofs/`",
       "- [ ] Re-running init does not overwrite existing files",
       "",
     ].join("\n")

@@ -23,4 +23,5 @@ Non-negotiables:
 - do not pause for reversible work
 - escalate destructive or irreversible decisions
 - use `pipeline/steps/` as the canonical execution location
+- use shipped `whytcard-*` subagents as explicit delegation targets
 - do not claim exhaustive understanding after partial reading

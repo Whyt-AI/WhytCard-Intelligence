@@ -15,6 +15,7 @@ Analyze, decompose, implement, and verify the feature without repeated approval 
 - Use community findings only as caveats.
 - If exhaustive reading was requested, list the requested corpus and do not claim full understanding until all requested items were read.
 - Use `.whytcard/projects/{id}/pipeline/steps/` for real execution steps.
+- You own the pipeline contracts. The subagent owns the step execution.
 
 ## Workflow
 
@@ -31,7 +32,7 @@ From the user's request, extract:
 
 ### 2. Impact analysis
 
-Launch an exploration subagent to:
+Delegate impact analysis to `whytcard-researcher` to:
 - Read the relevant parts of the codebase
 - Identify files that will need modification
 - Check for existing patterns to follow
@@ -59,12 +60,17 @@ Use descriptive slugs such as `S010-feature-login-form`.
 
 ### 5. Execute
 
-Delegate each step to an implementation subagent. Review evidence after each. Iterate on failure.
+For each step:
+
+1. Refine `instruction.md` and `acceptance.md` until the contract is precise.
+2. Delegate execution to `whytcard-implementer`.
+3. Review the evidence with `whytcard-reviewer`.
+4. If the step fails, improve the step contract before retrying.
 
 ### 6. Verify
 
 After all steps:
 - Run full gate suite (lint, type-check, test, build)
 - Save final proof under `.whytcard/projects/{id}/proofs/`
-- Launch a review subagent to check the feature quality
-- If UI: launch a browser subagent for visual verification (use wi-check-browser skill)
+- Launch `whytcard-reviewer` to check feature quality
+- If UI: launch `whytcard-visual-verifier` for visual proof

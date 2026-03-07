@@ -15,6 +15,7 @@ Interactive session. You and the user are the brain. Research subagents gather t
 - Community posts are allowed only as clearly labeled caveats.
 - If the user requested exhaustive reading, list the requested corpus and do not claim full understanding until all requested items were read.
 - Produce at least 3 approaches unless the user explicitly narrows the scope.
+- Keep hands off target code. Your job is to create clarity, options, and the next pipeline-ready contracts.
 
 ## Workflow
 
@@ -28,13 +29,12 @@ If the reading is incomplete, say exactly what remains unread.
 
 From the user's request, extract 2-4 research questions that need answers before deciding on an approach. Ask the user if the axes look right.
 
-### 3. Launch research subagents in parallel
+### 3. Launch research specialists in parallel
 
-For each axis, create and launch a research subagent:
+For each axis, create and launch a research specialist:
 
-- **Codebase subagent** - Explore the existing code for relevant patterns, conventions, dependencies
-- **Web research subagent** - Search for official docs first, then alternatives and caveats (use the `wi-search-web` skill)
-- **Stack research subagent** - If technology choices are involved, compare options with real data (use the `wi-research-stack` skill)
+- `whytcard-researcher` - Explore the existing code for relevant patterns, conventions, dependencies, official docs, alternatives, and caveats
+- `whytcard-planner` - When the decision space is broad, help synthesize trade-offs into executable next steps
 
 Launch them in parallel. Each runs in an isolated context. Your context stays clean.
 
@@ -86,6 +86,7 @@ When the brainstorm converges:
 - Write the brainstorm document to `.whytcard/projects/{id}/brainstorms/{topic}-{date}.md`
 - Create the implementation plan in `.whytcard/projects/{id}/plans/{topic}-{date}.md`
 - The plan contains the micro-action pipeline ready for execution under `.whytcard/projects/{id}/pipeline/steps/`
+- If the next move is clear, draft the first step contract so the orchestrator can delegate without rethinking the whole problem later
 
 ## Brainstorm document format
 

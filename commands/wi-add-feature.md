@@ -21,5 +21,6 @@ Non-negotiables:
 
 - keep steps atomic and scoped
 - use `pipeline/steps/`, not legacy phase folders
+- keep target-code execution inside shipped `whytcard-*` subagents
 - verify the feature with real gates
 - do not claim exhaustive understanding after partial reading

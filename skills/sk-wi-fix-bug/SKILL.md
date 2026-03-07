@@ -16,6 +16,7 @@ Systematically reproduce, diagnose, fix, and prove the bug fix.
 - Keep community bug reports as caveats, not as the core model.
 - If exhaustive reading was requested, list the requested corpus and do not claim full understanding until all requested items were read.
 - Use `.whytcard/projects/{id}/pipeline/steps/` for real execution steps.
+- The orchestrator owns reproduction strategy, step contracts, and review. Delegated specialists own diagnosis and fix attempts.
 
 ## Workflow
 
@@ -33,14 +34,14 @@ From the user's report, extract:
 
 ### 2. Reproduce
 
-Launch a diagnostic subagent to:
+Delegate reproduction to `whytcard-debugger` to:
 - Find the relevant code paths
 - Reproduce the bug (run the code, check logs)
 - Confirm the exact failure point (file:line)
 
 ### 3. Diagnose root cause
 
-Launch an analysis subagent to:
+Delegate root-cause analysis to `whytcard-debugger` to:
 - Trace the execution path
 - Identify WHY it fails (not just WHERE)
 - Check if this is a regression (was it working before?)
@@ -56,7 +57,8 @@ Create a single step in:
 - `acceptance.md` - Bug no longer reproducible + all existing tests pass + new test covering the bug
 - `evidence/` - repro logs, screenshots, command outputs
 
-Delegate to an implementation subagent.
+Delegate the fix step to `whytcard-implementer`.
+If the first fix attempt fails, update the step contract with the new diagnosis before retrying.
 
 ### 5. Verify
 
@@ -64,3 +66,4 @@ Delegate to an implementation subagent.
 - Confirm no regressions (all gates green)
 - If the bug had no test coverage: the subagent must add one
 - Save repo-level verification proof under `.whytcard/projects/{id}/proofs/`
+- Review the final evidence with `whytcard-reviewer`

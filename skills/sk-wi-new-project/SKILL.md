@@ -15,6 +15,7 @@ Create a new project with minimal interruption while keeping the work traceable 
 - Community sources are caveats only.
 - If exhaustive reading was requested, list the requested corpus and do not claim full understanding until it is fully read.
 - Real execution steps belong under `.whytcard/projects/{projectId}/pipeline/steps/`.
+- You own the architecture, pipeline, and quality bar. Delegated specialists own each step execution.
 
 ## Workflow
 
@@ -23,7 +24,7 @@ Create a new project with minimal interruption while keeping the work traceable 
 Before creating any steps, ensure the canonical per-project KB structure exists.
 
 - Run the `wi-init-project` skill (idempotent; no overwrites).
-- Use the created `.whytcard/projects/{projectId}/00_orchestrator/*` as the home for base orchestration state.
+- Use the created `.whytcard/projects/{projectId}/pipeline/*` as the home for active orchestration state.
 - Use `.whytcard/projects/{projectId}/plans/` for implementation plans.
 
 ### 1. Gather requirements
@@ -35,9 +36,9 @@ If the user hasn't specified, ask:
 
 ### 2. Research
 
-Launch research subagents in parallel:
-- **Stack research** - Current versions, best practices, recommended project structure (use wi-research-stack skill)
-- **Tooling research** - Package manager, linter, formatter, test runner for this stack
+Launch research specialists in parallel:
+- `whytcard-researcher` - Current versions, best practices, recommended project structure
+- `whytcard-planner` - Proposed sequencing and first implementation slices
 
 ### 3. Create the pipeline
 
@@ -57,12 +58,17 @@ Each step gets `instruction.md` + `acceptance.md`.
 
 ### 4. Execute
 
-Delegate each step to an implementation subagent. Review evidence after each step. Iterate on failure.
+For each step:
+
+1. Refine `instruction.md` and `acceptance.md`.
+2. Delegate execution to `whytcard-implementer`.
+3. Review evidence with `whytcard-reviewer`.
+4. If a step fails, improve the pipeline contract before retrying.
 
 ### 5. Verify
 
 After all steps pass:
 
 - save repo-level gate proof under `.whytcard/projects/{projectId}/proofs/`
-- launch a review subagent (use `wi-review-codebase`) to validate the overall project quality
+- launch `whytcard-reviewer` to validate the overall project quality
 - save the review under `.whytcard/projects/{projectId}/reviews/`

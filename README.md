@@ -1,8 +1,23 @@
 # WhytCard Intelligence
 
-Practical orchestration plugin for Cursor.
+Standalone Cursor-only orchestration plugin.
 
 The plugin teaches an orchestrator to research first, delegate to specialized subagents, keep proof, and iterate until the result is actually validated.
+
+## Standalone promise
+
+This plugin is standalone for Cursor in the packaging sense:
+
+- no npm install
+- no extra plugin required
+- no MCP server required
+- no external skill pack required
+- no project-local `.cursor/` dependency required
+
+It ships its own commands, skills, rules, agents, hooks, and helper scripts.
+The global install alone is enough for correct Cursor behavior.
+Project-local `.cursor/` sync is optional.
+Runtime requirement: Cursor plus a working `node` command in `PATH`, because Cursor executes the shipped hook scripts through Node.js.
 
 ## Platform model: official surfaces first
 
@@ -21,12 +36,13 @@ These are plugin conventions, not official platform modes:
 
 Canonical project knowledge lives under `.whytcard/projects/<projectId>/`.
 
-Base scaffold created by `wi-init-project`:
+Pipeline-first scaffold created by `wi-init-project`:
 
-- `00_orchestrator/`
-- `01_foundation/steps/S001-project-scaffold/`
+- `pipeline/plan.md`
+- `pipeline/state.json`
+- `pipeline/steps/S000-bootstrap-scaffold/`
 
-Canonical working layout once real work starts:
+Canonical supporting layout:
 
 - `pipeline/steps/` - execution steps, each with `instruction.md`, `acceptance.md`, and `evidence/`
 - `research/` - official-doc research notes and caveats
@@ -35,7 +51,7 @@ Canonical working layout once real work starts:
 - `reviews/` - audit and review outputs
 - `proofs/` - repo-level proof such as gates, screenshots, and walkthrough artifacts
 
-`pipeline/steps/` is the source of truth for real execution. Older numbered phase folders are obsolete and must not be reused.
+`pipeline/` is the execution spine. `pipeline/steps/` is the source of truth for real execution work. Older numbered phase folders are obsolete and must not be reused.
 
 ## Exhaustive-reading contract
 
@@ -64,14 +80,25 @@ Quick start:
 
 - Windows: `.\scripts\install-plugin.ps1`
 - Linux/macOS: `bash ./scripts/install-plugin.sh`
+- Optional project-local sync: `.\scripts\install-plugin.ps1 -ProjectRoot "<repo>"` or `bash ./scripts/install-plugin.sh --project-root "<repo>"`
 
 Then reload Cursor.
 
 The installer is Cursor-only and also cleans known legacy conflicts (`whytcardAI-plugin` hooks/rules) so only current `whytcard-intelligence` behavior remains active.
+It also validates merged `~/.cursor/hooks.json` so invalid event names or missing hook scripts fail fast.
+It installs shipped WhytCard subagents into `~/.cursor/agents/` so the orchestrator has explicit delegation targets.
+If you pass a project root, it also syncs the plugin-managed assets into that repo's local `.cursor/` directory while intentionally keeping active hooks managed globally by default.
 
 ## Quick verification
 
 - In Cursor chat, type `/wi` and confirm the `/wi-*` commands are available.
+- In Cursor chat, type `/whytcard-` and confirm the shipped WhytCard subagents are available.
+- Use `/wi-dispatch-step` and `/wi-review-step` to run the orchestrator loop step by step.
+- Run `/wi-create-step` when you want a fast, clean pipeline step scaffold before delegating.
+- Run `/wi-create-agent` only when a reusable specialist role is missing.
+- Run `/wi-sync-project-cursor` when you want the current repo's `.cursor/` instructions/assets refreshed from the installed plugin.
+- Run `node ./scripts/test-plugin.js` from the repo root to smoke-test the core hook contracts.
+- Run `node ./scripts/audit-standalone.js` from the repo root to verify the plugin has no hidden external runtime/package dependencies.
 - Run `/wi-init-project` once in a repo to create the base `.whytcard/projects/<id>/...` scaffold.
 - Run `/wi-whytcard` only when you explicitly want the full end-to-end pipeline.
 

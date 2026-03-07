@@ -11,10 +11,32 @@
 
 const {
   handleStdin,
-  injectContext,
+  postToolUseContext,
   emptyResponse,
   isVisualFile,
 } = require("./lib/output");
+
+const ORCHESTRATION_PATTERNS = [
+  /(?:^|[/\\])hooks[/\\]/i,
+  /(?:^|[/\\])rules[/\\]/i,
+  /(?:^|[/\\])commands[/\\]/i,
+  /(?:^|[/\\])skills[/\\]/i,
+  /(?:^|[/\\])scripts[/\\]/i,
+  /(?:^|[/\\])\.whytcard[/\\]/i,
+  /(?:^|[/\\])\.cursor[/\\]/i,
+  /wi-config\.json$/i,
+  /\.mdc$/i,
+  /\.md$/i,
+  /plugin\.json$/i,
+  /hooks\.cursor\.json$/i,
+  /hooks\.json$/i,
+  /manifest\.(?:json|ya?ml)$/i,
+  /AGENTS\.md$/i,
+];
+
+function isOrchestrationFile(filePath) {
+  return ORCHESTRATION_PATTERNS.some((pattern) => pattern.test(filePath));
+}
 
 handleStdin((data) => {
   const toolInput = data.tool_input || {};
@@ -33,6 +55,7 @@ handleStdin((data) => {
   const appCodePattern = /\.(tsx?|jsx?|vue|svelte|rs|py|go)$/i;
   if (
     appCodePattern.test(filePathLower) &&
+    !isOrchestrationFile(filePathLower) &&
     !/\.whytcard/i.test(filePathLower)
   ) {
     reminders.push(
@@ -41,7 +64,7 @@ handleStdin((data) => {
   }
 
   if (reminders.length > 0) {
-    return injectContext("PostToolUse", reminders.join("\n"));
+    return postToolUseContext(reminders.join("\n"));
   }
   return emptyResponse();
 });

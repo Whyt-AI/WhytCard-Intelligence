@@ -16,11 +16,12 @@ Return:
 - the resolved project id
 - the created or already-present scaffold paths
 - a reminder that real execution steps belong under `pipeline/steps/`
+- the suggestion to use `/wi-create-step` for the next bounded micro-action
 
 Non-negotiables:
 
 - do not overwrite existing files
-- keep `00_orchestrator/` and `01_foundation/` as the base scaffold
+- create a pipeline-first scaffold rooted in `pipeline/`
 - use `pipeline/steps/` as the canonical execution path
 - do not claim exhaustive understanding after partial reading
 

@@ -9,10 +9,11 @@ This skill initializes the canonical WhytCard project structure inside the curre
 
 ## Canonical layout
 
-Base scaffold guaranteed by `wi-init-project`:
+Pipeline-first scaffold guaranteed by `wi-init-project`:
 
-- `.whytcard/projects/<projectId>/00_orchestrator/`
-- `.whytcard/projects/<projectId>/01_foundation/steps/S001-project-scaffold/`
+- `.whytcard/projects/<projectId>/pipeline/plan.md`
+- `.whytcard/projects/<projectId>/pipeline/state.json`
+- `.whytcard/projects/<projectId>/pipeline/steps/S000-bootstrap-scaffold/`
 
 Canonical working directories for real project work:
 
@@ -28,7 +29,7 @@ Important:
 - `wi-init-project` must not overwrite existing work.
 - The current script guarantees only the base scaffold above.
 - Later skills and workflows create missing canonical working directories on demand.
-- `pipeline/steps/` is the canonical execution location. Do not introduce legacy numbered phase folders for execution work.
+- `pipeline/` is the execution spine and `pipeline/steps/` is the canonical execution location. Do not introduce legacy numbered phase folders for execution work.
 
 ## Rules
 
@@ -66,9 +67,10 @@ node "$env:USERPROFILE\.cursor\plugins\whytcard-intelligence\scripts\wi-init-pro
 
 ## Acceptance
 
-- `.whytcard/projects/<projectId>/00_orchestrator/master_plan.md` exists
-- `.whytcard/projects/<projectId>/00_orchestrator/state_machine.json` exists (valid JSON)
-- `.whytcard/projects/<projectId>/01_foundation/steps/S001-project-scaffold/{instruction.md,acceptance.md}` exists
-- The docs and later workflows treat `pipeline/steps/`, `research/`, `brainstorms/`, `plans/`, `reviews/`, and `proofs/` as canonical locations
+- `.whytcard/projects/<projectId>/pipeline/plan.md` exists
+- `.whytcard/projects/<projectId>/pipeline/state.json` exists (valid JSON)
+- `.whytcard/projects/<projectId>/pipeline/steps/S000-bootstrap-scaffold/{instruction.md,acceptance.md}` exists
+- The docs and later workflows treat `pipeline/`, `pipeline/steps/`, `research/`, `brainstorms/`, `plans/`, `reviews/`, and `proofs/` as canonical locations
+- The orchestrator can use `wi-create-step` to bootstrap the next bounded step contract
 - Re-running does not overwrite existing files
 
