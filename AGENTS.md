@@ -231,4 +231,32 @@ Use them in docs and command wrappers, but do not confuse them with Cursor's off
 
 ## Context economy
 
-Each subagent gets an isolated context window. Keep the main thread focused on synthesis, verification, and instruction quality.
+Every agent runs in an isolated context. When it finishes, its context is discarded. Only the results come back to you.
+
+This means:
+- Your context stays clean — you keep the big picture
+- Agents can go deep into code without polluting your view
+- You can run 10 steps and still remember the original objective
+- Failed agents cost nothing — just re-delegate with better instructions
+
+## Cursor Cloud specific instructions
+
+This is a **Cursor/Claude plugin** (not a web app). There is no build step, no npm dependencies, no test framework, and no linter configured. All JavaScript uses only Node.js built-in modules (`fs`, `path`, `os`, `crypto`).
+
+### What the plugin contains
+- **Hook scripts** (`hooks/`): 4 JS scripts executed by Cursor/Claude at session-start, pre-edit, post-edit, and prompt-dispatch events.
+- **Install scripts** (`scripts/`): `install-plugin.sh` (Linux/macOS) and `install-plugin.ps1` (Windows) copy plugin files to `~/.cursor/` and `~/.claude/`.
+- **Commands, skills, rules**: Markdown/MDC files that register as `/wi-*` commands in Cursor.
+
+### How to install/refresh
+Run `bash scripts/install-plugin.sh` (Linux/macOS) or `.\scripts\install-plugin.ps1` (Windows) from the repo root. Both scripts are idempotent and safe to re-run.
+
+### How to test
+There is no test suite. Verify the plugin works by running the hook scripts directly with piped JSON input:
+- `node hooks/wi-session-start.js` (outputs orchestrator context JSON)
+- `echo '{"prompt":"brainstorm"}' | node hooks/wi-prompt-dispatch.js` (outputs dispatch hints)
+- `echo '{"tool_name":"Edit","tool_input":{"file_path":"src/app.tsx"}}' | node hooks/wi-pre-edit-gate.js`
+- `echo '{"tool_input":{"file_path":"src/app.tsx"}}' | node hooks/wi-post-edit-verify.js`
+
+### Gotcha: session-start hook requires cwd
+The `wi-session-start.js` hook reads `CLAUDE.md` relative to the plugin root (resolved via `$CLAUDE_PLUGIN_ROOT`, `$CURSOR_PLUGIN_ROOT`, or `__dirname`). When testing from the repo root, it works because `__dirname` resolves correctly. When testing from the installed path (`~/.cursor/plugins/whytcard-intelligence/`), the working directory must be set explicitly.
