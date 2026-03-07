@@ -1,3 +1,4 @@
+---
 description: "Execution tracking - pipeline discipline for the orchestrator during multi-step execution"
 alwaysApply: true
 ---
@@ -65,6 +66,7 @@ When you spot these in a subagent's output, the fix is in the instruction: add e
 ## Session continuity
 
 If the session gets long:
+
 1. Complete the current step fully
 2. Update pipeline state with current position
 3. Document clearly so a new session can resume exactly where you stopped

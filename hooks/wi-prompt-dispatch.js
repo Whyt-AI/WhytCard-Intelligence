@@ -4,7 +4,7 @@
  *
  * Analyzes the user's prompt keywords and injects dispatch hints
  * so the orchestrator knows which skills to give its agents.
- * Works on both Claude Code and Cursor via shared output module.
+ * Works in Cursor via the shared output module.
  */
 
 const { handleStdin, injectContext, emptyResponse } = require("./lib/output");

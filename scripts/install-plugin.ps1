@@ -1,5 +1,5 @@
-# WhytCard Intelligence - Install script for Cursor and Claude Code
-# Copies plugin to ~/.cursor/plugins/ and registers in ~/.claude/
+# WhytCard Intelligence - Install script for Cursor
+# Copies plugin to ~/.cursor/plugins/ and installs global Cursor assets
 
 $ErrorActionPreference = "Stop"
 $PluginName = "whytcard-intelligence"

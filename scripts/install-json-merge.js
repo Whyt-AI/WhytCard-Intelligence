@@ -31,8 +31,8 @@ try {
 settings.enabledPlugins = settings.enabledPlugins || {};
 settings.enabledPlugins[pluginId] = true;
 
-// Prune broken user-level Claude hooks that point to missing files.
-// (Claude can crash the hook runner if a referenced script is missing.)
+// Prune broken user-level hooks that point to missing files.
+// Prevents stale command hooks from crashing the host hook runner.
 function parseNodeTarget(command) {
   const s = String(command || "").trim();
   if (!s.toLowerCase().startsWith("node ")) return null;

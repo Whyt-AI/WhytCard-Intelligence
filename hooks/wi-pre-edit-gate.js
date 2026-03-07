@@ -7,7 +7,7 @@
  * 2. Inject quality reminders (visual, version, research) for legitimate edits
  *
  * Blocks forbidden edits and injects context reminders for allowed ones.
- * Works on both Claude Code and Cursor via shared output module.
+ * Works in Cursor via the shared output module.
  */
 
 const {
@@ -27,17 +27,15 @@ const ORCHESTRATION_PATTERNS = [
   /(?:^|[/\\])scripts[/\\]/i,
   /(?:^|[/\\])\.whytcard[/\\]/i,
   /(?:^|[/\\])\.cursor[/\\]/i,
-  /(?:^|[/\\])\.claude[/\\]/i,
   /(?:^|[/\\])pipeline[/\\]/i,
   /wi-config\.json$/i,
   /package\.json$/i,
   /\.mdc$/i,
   /\.md$/i,
   /plugin\.json$/i,
-  /hooks\.(?:cursor|claude)\.json$/i,
+  /hooks\.cursor\.json$/i,
   /hooks\.json$/i,
   /manifest\.(?:json|ya?ml)$/i,
-  /CLAUDE\.md$/i,
   /AGENTS\.md$/i,
 ];
 

@@ -6,7 +6,7 @@
  * - Evaluate visual work with the visual-verify grid
  * - Check agent evidence for application code changes
  *
- * Works on both Claude Code and Cursor via shared output module.
+ * Works in Cursor via the shared output module.
  */
 
 const { handleStdin, injectContext, emptyResponse, isVisualFile } = require("./lib/output");
