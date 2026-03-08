@@ -9,7 +9,7 @@ No machine-specific paths, usernames, or project-specific values are allowed.
 Deliver a fully working Cursor setup where:
 
 - WhytCard hooks are active
-- WhytCard commands/skills/rules are available
+- WhytCard commands/skills/agents are available
 - WhytCard's orchestrator mindset is active
 - legacy/conflicting behavior is removed
 - setup is verified with evidence
@@ -47,15 +47,15 @@ Do not use absolute machine paths in docs, outputs, or hardcoded instructions.
    - `~/.cursor/agents` contains `whytcard-*` subagents
    - `~/.cursor/commands` contains `wi-*` commands
    - `~/.cursor/skills` contains `wi-*` skills
-   - `~/.cursor/rules` contains WhytCard rules
 5. Enforce rule activation:
-   - ensure `~/.cursor/rules/orchestrator-identity.mdc` exists (installed by plugin)
-   - the plugin rule has `alwaysApply: true` for global enforcement
+   - ensure the installed `sessionStart` hook injects WhytCard global instructions at runtime
+   - do not claim the plugin wrote Cursor UI-managed `User Rules`
+   - if repo-local sync was requested, ensure `.cursor/rules/` in the repo contains the WhytCard project rules
 6. Verify hook health with smoke tests:
    - `node ./scripts/test-plugin.js`
    - if it fails, inspect the failing hook directly with targeted manual input
 7. Verify orchestrator posture:
-   - the installed rules describe an orchestrator that plans, delegates, reviews, and improves the pipeline
+   - the installed runtime rule bundle describes an orchestrator that plans, delegates, reviews, and improves the pipeline
    - the plugin is not presented as a direct-coding assistant for target project work
 
 ## Optional strict mode (recommended for conflict-heavy environments)
@@ -73,9 +73,9 @@ Setup is complete only if all checks pass:
 
 - [ ] installer executed successfully
 - [ ] WhytCard hooks present in Cursor hooks config
-- [ ] WhytCard agents/rules/skills/commands present
+- [ ] WhytCard agents/skills/commands present
 - [ ] if requested, workspace `.cursor/` refreshed with current WhytCard-managed assets
-- [ ] workspace/global rule present (orchestrator-identity.mdc with `alwaysApply: true`)
+- [ ] runtime instruction bundle present through `sessionStart` hook output
 - [ ] hook smoke tests produce valid output (no missing-module or missing-file errors)
 - [ ] no legacy/conflicting WhytCard artifacts remain
 

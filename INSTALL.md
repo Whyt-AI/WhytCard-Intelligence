@@ -65,9 +65,10 @@ The install scripts now proactively remove known legacy conflicts before install
 
 - legacy Cursor plugin folder `~/.cursor/plugins/whytcardAI-plugin`
 - legacy Cursor rules matching `~/.cursor/rules/wc-*.mdc`
+- stale plugin-managed global rule mirrors in `~/.cursor/rules/`
 - legacy hook entries sourced from `whytcardAI-plugin` inside `~/.cursor/hooks.json`
 
-This ensures only the current `whytcard-intelligence` hooks/rules stay active.
+This ensures only the current `whytcard-intelligence` hooks and runtime rule sources stay active.
 
 ## What the current scripts actually install
 
@@ -77,10 +78,11 @@ The install scripts currently do all of the following for Cursor:
 - copy `agents/*.md` into `~/.cursor/agents/`
 - copy `commands/*.md` into `~/.cursor/commands/`
 - copy `skills/*` into `~/.cursor/skills/`
-- copy `rules/*.mdc` into `~/.cursor/rules/`
+- keep `rules/*.mdc` inside the installed plugin as the source bundle for runtime injection and project sync
 - merge Cursor hooks into `~/.cursor/hooks.json`
 - validate merged hooks (event names + command targets)
 - prune legacy `whytcardAI-plugin` hook entries during the merge
+- clean stale WhytCard rule mirrors from `~/.cursor/rules/`
 - optionally sync plugin-managed assets into `<repo>/.cursor/`
 
 Important implementation detail:
@@ -88,8 +90,10 @@ Important implementation detail:
 - `.cursor-plugin/plugin.json` declares `commands`, `skills`, and `rules`
 - it does not currently declare hooks or user-level subagents
 - `hooks/hooks.cursor.json` is still the source template for Cursor hooks, but the installer merges those hooks into the user-level `~/.cursor/hooks.json`
+- the `sessionStart` hook injects the WhytCard global rule bundle at runtime for every chat session
+- the installer does not write Cursor's UI-managed `User Rules`
 - `agents/*.md` is the source for shipped Cursor subagents, and the installer copies them into `~/.cursor/agents/`
-- `scripts/sync-project-cursor.js` can refresh a repo-local `.cursor/` tree with WhytCard-managed assets
+- `scripts/sync-project-cursor.js` can refresh a repo-local `.cursor/` tree with WhytCard-managed assets, including official project rules under `.cursor/rules/`
 
 This is a repo-specific implementation choice. Official Cursor supports plugin manifests and user/project hook configs, but this repo uses user-level Cursor hook installation for predictable standalone behavior.
 
@@ -108,7 +112,7 @@ In this repo:
 
 Important:
 
-- local `.cursor/` sync is for project-visible instructions, rules, commands, agents, hook templates, and helper scripts
+- local `.cursor/` sync is for project-visible instructions, project rules, commands, agents, hook templates, and helper scripts
 - active hooks still stay global in `~/.cursor/hooks.json` by default
 - this avoids relying on a second active hook surface in project `.cursor/hooks.json`
 
@@ -120,21 +124,26 @@ Important:
 2. Reload Cursor.
 3. In chat, type `/wi` and confirm commands such as `/wi-init-project`, `/wi-brainstorm`, and `/wi-whytcard`.
 4. In chat, type `/whytcard-` and confirm the shipped WhytCard subagents are available.
-5. Verify rules appear in Cursor settings.
-6. Verify `~/.cursor/hooks.json` contains the WhytCard hook entries after install.
-7. Run:
+5. Verify `~/.cursor/hooks.json` contains the WhytCard hook entries after install.
+6. Run:
 
 ```bash
 node ./scripts/test-plugin.js
 ```
-8. If you used project sync, verify the repo now has refreshed WhytCard files under `.cursor/`.
-9. Optionally run:
+7. If you used project sync, verify the repo now has refreshed WhytCard files under `.cursor/`, including `.cursor/rules/`.
+8. Optionally run:
 
 ```bash
 node ./scripts/audit-standalone.js
 ```
 
 This verifies that the shipped plugin still has no hidden external runtime/package dependencies or machine-specific hardcoded paths.
+
+Important:
+
+- Cursor `User Rules` are UI-managed according to the official docs.
+- This plugin achieves global WhytCard instruction enforcement through the installed `sessionStart` hook instead.
+- If you want rules visible as official project rules, use repo-local `.cursor/` sync.
 
 ## Canonical project KB behavior
 

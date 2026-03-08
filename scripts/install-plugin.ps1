@@ -1,5 +1,5 @@
 # WhytCard Intelligence - Install script for Cursor
-# Copies plugin to ~/.cursor/plugins/ and installs global Cursor assets.
+# Copies plugin to ~/.cursor/plugins/ and installs global Cursor runtime assets.
 # Optional: also synchronize plugin-managed assets into a project's local `.cursor/`.
 
 param(
@@ -17,6 +17,14 @@ $CursorAgentsDir = Join-Path $env:USERPROFILE ".cursor\agents"
 $CursorRulesDir = Join-Path $env:USERPROFILE ".cursor\rules"
 $CursorHooksPath = Join-Path $env:USERPROFILE ".cursor\hooks.json"
 $LegacyCursorPluginDir = Join-Path $env:USERPROFILE ".cursor\plugins\whytcardAI-plugin"
+$PluginManagedRuleNames = @(
+  "orchestrator-identity.mdc",
+  "research-first.mdc",
+  "version-check.mdc",
+  "visual-verify.mdc",
+  "execution-tracking.mdc",
+  "brainstorm.mdc"
+)
 
 $DirsToCopy = @(".cursor-plugin", "agents", "commands", "rules", "skills", "hooks", "scripts", "AGENTS.md", "INSTALL.md", "README.md", "LICENSE")
 
@@ -115,24 +123,28 @@ if (Test-Path $AgentsSrcDir) {
   Write-Host "  WARN: agents/ missing in repo; skipping global agents install" -ForegroundColor Yellow
 }
 
-# Optional: global Cursor rules (visible in Cursor Settings → Rules)
+# Cleanup only: remove stale plugin-managed rule mirrors from ~/.cursor/rules.
+# Official Cursor User Rules are UI-managed. WhytCard global instruction enforcement
+# comes from the installed sessionStart hook. Project rules remain available through
+# repo-local `.cursor/rules/` sync.
 New-Item -ItemType Directory -Path $CursorRulesDir -Force | Out-Null
-$RulesSrcDir = Join-Path $RepoRoot "rules"
-if (Test-Path $RulesSrcDir) {
-  Get-ChildItem -Path $CursorRulesDir -Filter "wc-*.mdc" -File -ErrorAction SilentlyContinue | ForEach-Object {
-    Remove-Item -Force $_.FullName
-    Write-Host "  - Removed legacy rule: $($_.Name)" -ForegroundColor Green
-  }
-  $legacyGlobalRule = Join-Path $CursorRulesDir "plugins-orchestrator-global.mdc"
-  if (Test-Path $legacyGlobalRule) {
-    Remove-Item -Force $legacyGlobalRule
-    Write-Host "  - Removed legacy global orchestrator rule: plugins-orchestrator-global.mdc" -ForegroundColor Green
-  }
-  Copy-Item (Join-Path $RulesSrcDir "*.mdc") $CursorRulesDir -Force
-  Write-Host "  OK: Cursor rules installed to $CursorRulesDir" -ForegroundColor Green
-} else {
-  Write-Host "  WARN: rules/ missing in repo; skipping global rules install" -ForegroundColor Yellow
+Get-ChildItem -Path $CursorRulesDir -Filter "wc-*.mdc" -File -ErrorAction SilentlyContinue | ForEach-Object {
+  Remove-Item -Force $_.FullName
+  Write-Host "  - Removed legacy rule: $($_.Name)" -ForegroundColor Green
 }
+$legacyGlobalRule = Join-Path $CursorRulesDir "plugins-orchestrator-global.mdc"
+if (Test-Path $legacyGlobalRule) {
+  Remove-Item -Force $legacyGlobalRule
+  Write-Host "  - Removed legacy global orchestrator rule: plugins-orchestrator-global.mdc" -ForegroundColor Green
+}
+foreach ($ruleName in $PluginManagedRuleNames) {
+  $staleRule = Join-Path $CursorRulesDir $ruleName
+  if (Test-Path $staleRule) {
+    Remove-Item -Force $staleRule
+    Write-Host "  - Removed stale global rule mirror: $ruleName" -ForegroundColor Green
+  }
+}
+Write-Host "  OK: Global rule mirrors cleaned from $CursorRulesDir (runtime enforcement now comes from hooks)" -ForegroundColor Green
 
 Write-Host ""
 Write-Host "[2/4] Installing global Cursor hooks..." -ForegroundColor Yellow
@@ -162,6 +174,7 @@ Write-Host "Next steps:" -ForegroundColor White
 Write-Host "  1. Restart Cursor (or Reload Window: Ctrl+Shift+P)" -ForegroundColor Gray
 Write-Host "  2. Commands /wi-whytcard, /wi-create-step, /wi-dispatch-step, /wi-review-step, /wi-create-agent should appear" -ForegroundColor Gray
 Write-Host "     (Global hooks are installed via ~/.cursor/hooks.json)" -ForegroundColor Gray
+Write-Host "     (WhytCard global instructions are injected by the sessionStart hook, not written into Cursor User Rules UI)" -ForegroundColor Gray
 if ($ProjectRoot) {
   Write-Host "  3. Project-local instructions/rules/assets were also synced into .cursor/" -ForegroundColor Gray
   Write-Host "     (Project-level active hooks are still intentionally not auto-enabled)" -ForegroundColor Gray

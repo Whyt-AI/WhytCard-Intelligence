@@ -18,30 +18,76 @@ const {
   hasLocalWhytcard,
 } = require("./lib/whytcard-kb");
 
-// ─── Load orchestrator identity ─────────────────────────────────────────
+// ─── Load runtime rule bundle ───────────────────────────────────────────
+
+function stripFrontmatter(markdown) {
+  if (!markdown.startsWith("---")) return markdown.trim();
+  const frontmatterMatch = markdown.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/);
+  if (!frontmatterMatch) return markdown.trim();
+  return markdown.slice(frontmatterMatch[0].length).trim();
+}
+
+function loadRuleBundle(rootDir) {
+  const rulesDir = path.join(rootDir, "rules");
+  const orderedRules = [
+    "orchestrator-identity.mdc",
+    "research-first.mdc",
+    "version-check.mdc",
+    "visual-verify.mdc",
+    "execution-tracking.mdc",
+    "brainstorm.mdc",
+  ];
+
+  if (!fs.existsSync(rulesDir)) return "";
+
+  const sections = [];
+  for (const filename of orderedRules) {
+    const candidate = path.join(rulesDir, filename);
+    if (!fs.existsSync(candidate)) continue;
+    try {
+      const content = stripFrontmatter(fs.readFileSync(candidate, "utf8"));
+      if (content) sections.push(content);
+    } catch (err) {
+      process.stderr.write(
+        `wi-session-start: failed to load rule ${filename} — ${err.message}\n`,
+      );
+    }
+  }
+
+  if (sections.length === 0) return "";
+  return [
+    "WhytCard global instruction bundle:",
+    "These rules are enforced through this sessionStart hook.",
+    "Do not assume Cursor User Rules UI mirrors them.",
+    "",
+    sections.join("\n\n"),
+  ].join("\n");
+}
 
 const pluginRoot = getPluginRoot();
-let identity = "";
-const identityCandidates = ["AGENTS.md", "README.md"];
-for (const filename of identityCandidates) {
-  const candidate = path.join(pluginRoot, filename);
-  if (!fs.existsSync(candidate)) continue;
-  try {
-    identity = fs.readFileSync(candidate, "utf8").trim();
-    break;
-  } catch (err) {
-    process.stderr.write(
-      `wi-session-start: failed to load ${filename} — ${err.message}\n`,
-    );
+let identity = loadRuleBundle(pluginRoot);
+if (!identity) {
+  const identityCandidates = ["AGENTS.md", "README.md"];
+  for (const filename of identityCandidates) {
+    const candidate = path.join(pluginRoot, filename);
+    if (!fs.existsSync(candidate)) continue;
+    try {
+      identity = fs.readFileSync(candidate, "utf8").trim();
+      break;
+    } catch (err) {
+      process.stderr.write(
+        `wi-session-start: failed to load ${filename} — ${err.message}\n`,
+      );
+    }
   }
 }
 if (!identity) {
   identity =
-    "WhytCard orchestrator identity unavailable (missing AGENTS.md/README.md).";
+    "WhytCard orchestrator identity unavailable (missing runtime rule bundle and AGENTS.md/README.md).";
 }
-const MAX_IDENTITY_CHARS = 3500;
+const MAX_IDENTITY_CHARS = 50000;
 if (identity.length > MAX_IDENTITY_CHARS) {
-  identity = `${identity.slice(0, MAX_IDENTITY_CHARS)}\n\n[truncated: see AGENTS.md for full details]`;
+  identity = `${identity.slice(0, MAX_IDENTITY_CHARS)}\n\n[truncated: see rules/*.mdc and AGENTS.md for full details]`;
 }
 
 // ─── Detect project stack ───────────────────────────────────────────────

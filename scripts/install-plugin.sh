@@ -26,6 +26,14 @@ CURSOR_AGENTS_DIR="${HOME}/.cursor/agents"
 CURSOR_RULES_DIR="${HOME}/.cursor/rules"
 CURSOR_HOOKS_PATH="${HOME}/.cursor/hooks.json"
 LEGACY_CURSOR_PLUGIN_DIR="${HOME}/.cursor/plugins/whytcardAI-plugin"
+PLUGIN_MANAGED_RULE_NAMES=(
+  "orchestrator-identity.mdc"
+  "research-first.mdc"
+  "version-check.mdc"
+  "visual-verify.mdc"
+  "execution-tracking.mdc"
+  "brainstorm.mdc"
+)
 
 DIRS_TO_COPY=(
   ".cursor-plugin"
@@ -124,20 +132,21 @@ else
 fi
 
 mkdir -p "${CURSOR_RULES_DIR}"
-if [[ -d "${REPO_ROOT}/rules" ]]; then
-  for legacy_rule in "${CURSOR_RULES_DIR}"/wc-*.mdc; do
-    rm -f "${legacy_rule}" 2>/dev/null || true
-    [[ -e "${legacy_rule}" ]] && say "  - Removed legacy rule: $(basename "${legacy_rule}")"
-  done
-  if [[ -f "${CURSOR_RULES_DIR}/plugins-orchestrator-global.mdc" ]]; then
-    rm -f "${CURSOR_RULES_DIR}/plugins-orchestrator-global.mdc"
-    say "  - Removed legacy global orchestrator rule: plugins-orchestrator-global.mdc"
-  fi
-  cp "${REPO_ROOT}/rules/"*.mdc "${CURSOR_RULES_DIR}/" 2>/dev/null || true
-  say "  OK: Cursor rules installed to ${CURSOR_RULES_DIR}"
-else
-  say "  WARN: rules/ missing in repo; skipping global rules install"
+for legacy_rule in "${CURSOR_RULES_DIR}"/wc-*.mdc; do
+  rm -f "${legacy_rule}" 2>/dev/null || true
+  [[ -e "${legacy_rule}" ]] && say "  - Removed legacy rule: $(basename "${legacy_rule}")"
+done
+if [[ -f "${CURSOR_RULES_DIR}/plugins-orchestrator-global.mdc" ]]; then
+  rm -f "${CURSOR_RULES_DIR}/plugins-orchestrator-global.mdc"
+  say "  - Removed legacy global orchestrator rule: plugins-orchestrator-global.mdc"
 fi
+for rule_name in "${PLUGIN_MANAGED_RULE_NAMES[@]}"; do
+  if [[ -f "${CURSOR_RULES_DIR}/${rule_name}" ]]; then
+    rm -f "${CURSOR_RULES_DIR}/${rule_name}"
+    say "  - Removed stale global rule mirror: ${rule_name}"
+  fi
+done
+say "  OK: Global rule mirrors cleaned from ${CURSOR_RULES_DIR} (runtime enforcement now comes from hooks)"
 
 shopt -u nullglob
 
@@ -162,6 +171,7 @@ say ""
 say "Next steps:"
 say "  1. Restart Cursor (or Reload Window)"
 say "  2. In Cursor chat, verify /wi-whytcard, /wi-create-step, /wi-dispatch-step, /wi-review-step, and /wi-create-agent"
+say "     (WhytCard global instructions are injected by the sessionStart hook, not written into Cursor User Rules UI)"
 if [[ -n "${PROJECT_ROOT}" ]]; then
   say "  3. Project-local instructions/rules/assets were also synced into .cursor/"
   say "     (Project-level active hooks are still intentionally not auto-enabled)"

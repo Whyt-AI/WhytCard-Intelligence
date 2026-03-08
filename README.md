@@ -19,6 +19,12 @@ The global install alone is enough for correct Cursor behavior.
 Project-local `.cursor/` sync is optional.
 Runtime requirement: Cursor plus a working `node` command in `PATH`, because Cursor executes the shipped hook scripts through Node.js.
 
+Global instruction note:
+
+- WhytCard does not try to write Cursor's UI-managed `User Rules`.
+- Instead, the installed `sessionStart` hook injects the WhytCard rule bundle at runtime for every chat session.
+- If you want repo-visible official project rules, use project-local `.cursor/` sync.
+
 ## Platform model: official surfaces first
 
 Cursor official concepts: Ask, Agent, Plan, Debug, subagents, hooks, plugins, rules, skills/commands, and Cloud Agents.
@@ -87,6 +93,7 @@ Then reload Cursor.
 The installer is Cursor-only and also cleans known legacy conflicts (`whytcardAI-plugin` hooks/rules) so only current `whytcard-intelligence` behavior remains active.
 It also validates merged `~/.cursor/hooks.json` so invalid event names or missing hook scripts fail fast.
 It installs shipped WhytCard subagents into `~/.cursor/agents/` so the orchestrator has explicit delegation targets.
+It injects the WhytCard orchestrator rules through the `sessionStart` hook instead of relying on Cursor `User Rules` storage.
 If you pass a project root, it also syncs the plugin-managed assets into that repo's local `.cursor/` directory while intentionally keeping active hooks managed globally by default.
 
 ## Quick verification

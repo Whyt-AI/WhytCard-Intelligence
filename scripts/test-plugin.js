@@ -67,6 +67,18 @@ function testSessionStart() {
     "sessionStart additional_context must contain orchestrator context",
   );
   ensure(
+    output.additional_context.includes("WhytCard global instruction bundle"),
+    "sessionStart must inject the WhytCard runtime rule bundle",
+  );
+  ensure(
+    output.additional_context.includes("# Orchestrator Identity"),
+    "sessionStart must include the orchestrator identity rule",
+  );
+  ensure(
+    output.additional_context.includes("Research-First"),
+    "sessionStart must include the research-first rule bundle",
+  );
+  ensure(
     output.additional_context.includes("/whytcard-implementer"),
     "sessionStart must advertise shipped WhytCard subagents",
   );
